@@ -1,13 +1,12 @@
 import React from "react";
 
-const Home: React.FC = () => {
+const Studio: React.FC = () => {
   return (
     <div>
-      <h1>Welcome to Sarah's Pilates</h1>
-      <p>Your wellness journey starts here!</p>
+      <h1 className="text-2xl font-bold">Studio Page</h1>
+      <p>Welcome to the Studio page of Sarah's Pilates!</p>
     </div>
   );
 };
 
-export default Home;
-
+export default Studio;

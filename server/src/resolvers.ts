@@ -1,5 +1,6 @@
 import { Resolvers } from "@apollo/client";
 import nodemailer from "nodemailer";
+import Appointment from "./models/Appointment";
 
 const resolvers: Resolvers = {
   Query: {
@@ -8,17 +9,19 @@ const resolvers: Resolvers = {
       { id: "2", name: "Group Class", description: "Small group mat class" },
     ],
   },
+
   Mutation: {
-    bookAppointment: (_, { name, email, date }) => {
-      const appointment = {
-        id: Date.now().toString(),
-        name,
-        email,
-        date,
+    bookAppointment: async (_, { name, email, date }) => {
+      const appointment = await Appointment.create({ name, email, date });
+      return {
+        id: appointment._id.toString(),
+        name: appointment.name,
+        email: appointment.email,
+        date: appointment.date,
       };
       console.log("Appointment booked:", appointment);
-      return appointment;
     },
+    
     sendContactEmail: async (_, { name, email, message }) => {
       try {
         const transporter = nodemailer.createTransport({
