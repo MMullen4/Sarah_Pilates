@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "@apollo/client": "^3.8.0",
+    "@emailjs/browser": "^4.4.1",
     "graphql": "^16.6.0",
     "react": "^18.2.0",
+    "react-calendar": "^6.0.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.16.0",
     "react-scripts": "5.0.1"

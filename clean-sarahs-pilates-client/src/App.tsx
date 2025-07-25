@@ -2,23 +2,26 @@ import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 
-// Dummy pages for now — we’ll build them next
-const Home = () => (
-  <div className="p-10 text-center text-2xl">Welcome to Sarah's Pilates!</div>
-);
-const About = () => <div className="p-10 text-center text-2xl">About Us</div>;
-const Studio = () => (
-  <div className="p-10 text-center text-2xl">Our Studio</div>
-);
-const Schedule = () => (
-  <div className="p-10 text-center text-2xl">Schedule a Class</div>
-);
-const Services = () => (
-  <div className="p-10 text-center text-2xl">Our Services</div>
-);
-const Contact = () => (
-  <div className="p-10 text-center text-2xl">Contact Us</div>
-);
+// Page components
+import About from "./pages/About";
+import Studio from "./pages/Studio";
+import Schedule from "./pages/Schedule";
+import Services from "./pages/Services";
+import Contact from "./pages/Contact";
+
+const Home: React.FC = () => {
+  return (
+    <div className="p-10 max-w-3xl mx-auto text-center">
+      <h1 className="text-4xl font-bold text-orange-600 mb-4">
+        Welcome to Pilates With Sarah!
+      </h1>
+      <p className="text-lg text-gray-700">
+        Empower and heal your mind and body through the strength of Pilates. Join us to
+        improve posture, flexibility, and overall well-being.
+      </p>
+    </div>
+  );
+};
 
 const App: React.FC = () => {
   return (
@@ -37,4 +40,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-
