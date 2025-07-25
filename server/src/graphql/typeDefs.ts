@@ -1,6 +1,6 @@
 import { gql } from "graphql-tag";
 
-export const typeDefs = gql`
+const typeDefs = gql`
   type Booking {
     _id: ID!
     name: String!
@@ -17,13 +17,30 @@ export const typeDefs = gql`
     time: String!
   }
 
-  type Mutation {
-    bookAppointment(input: BookingInput!): Booking
-    updateBooking(id: ID!, input: BookingInput!): Booking
-    deleteBooking(id: ID!): Boolean
+  type Service {
+    id: ID!
+    name: String!
+    description: String!
+  }
+
+  type Appointment {
+    id: ID!
+    name: String!
+    email: String!
+    date: String!
   }
 
   type Query {
     getBookings: [Booking!]!
+    services: [Service]
+  }
+
+  type Mutation {
+    bookAppointment(input: BookingInput!): Booking
+    updateBooking(id: ID!, input: BookingInput!): Booking
+    deleteBooking(id: ID!): Boolean
+    sendContactEmail(name: String!, email: String!, message: String!): Boolean
   }
 `;
+
+export default typeDefs;

@@ -4,7 +4,7 @@ import { expressMiddleware } from "@apollo/server/express4";
 import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db";
-import { typeDefs } from "./graphql/typeDefs";
+import  typeDefs from "./graphql/typeDefs";
 import { resolvers } from "./graphql/resolvers";
 
 dotenv.config();

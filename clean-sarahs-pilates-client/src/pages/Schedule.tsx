@@ -8,7 +8,6 @@ import {
   DELETE_BOOKING,
 } from "../graphql/mutations";
 
-
 const Schedule: React.FC = () => {
   const [date, setDate] = useState<Date>(new Date());
   const [formData, setFormData] = useState({ name: "", email: "", time: "" });
