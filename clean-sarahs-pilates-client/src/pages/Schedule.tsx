@@ -1,26 +1,38 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
+import { useMutation } from "@apollo/client";
+import { BOOK_APPOINTMENT } from "../utils/mutations";
 
 const Schedule: React.FC = () => {
   const [date, setDate] = useState<Date>(new Date());
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    time: "",
-  });
+  const [formData, setFormData] = useState({ name: "", email: "", time: "" });
   const [submitted, setSubmitted] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  const [bookAppointment, { loading, error }] = useMutation(BOOK_APPOINTMENT);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Booking submitted:", { ...formData, date });
-    setSubmitted(true);
+    try {
+      await bookAppointment({
+        variables: {
+          input: {
+            name: formData.name,
+            email: formData.email,
+            date: date.toISOString(),
+            time: formData.time,
+          },
+        },
+      });
+      setSubmitted(true);
+    } catch (err) {
+      console.error("Booking failed:", err);
+    }
   };
 
   return (
@@ -28,7 +40,6 @@ const Schedule: React.FC = () => {
       <h1 className="text-3xl font-bold text-orange-600 mb-4 text-center">
         Schedule a Session
       </h1>
-
       <img
         src="https://as2.ftcdn.net/v2/jpg/05/85/94/75/1000_F_585947577_bzC0PesLqbJRpmCCnqnTngwX78o0ZStt.jpg"
         alt="Pilates class"
@@ -36,77 +47,57 @@ const Schedule: React.FC = () => {
       />
 
       <p className="text-gray-700 text-center mb-4">
-        Choose a date to schedule your personal Pilates session with Sarah.
+        Choose a date and submit the form below.
       </p>
 
       <div className="flex justify-center mb-6">
-        <Calendar
-          onChange={(value) => setDate(value as Date)}
-          value={date}
-          minDate={new Date()}
-          tileClassName={({ date }) =>
-            date.toDateString() === new Date().toDateString()
-              ? "bg-orange-100"
-              : undefined
-          }
-          tileDisabled={({ date }) =>
-            date < new Date(new Date().setHours(0, 0, 0, 0))
-          }
-        />
+        <Calendar onChange={(value) => setDate(value as Date)} value={date} />
       </div>
 
-      <p className="text-center mt-2 text-gray-600 mb-6">
-        Selected Date: <strong>{date.toDateString()}</strong>
-      </p>
-
       <form
+        ref={formRef}
         onSubmit={handleSubmit}
-        className="bg-gray-100 p-6 rounded-lg shadow-md space-y-4"
+        className="space-y-4 max-w-md mx-auto"
       >
         <input
-          type="text"
           name="name"
           placeholder="Your Name"
-          value={formData.name}
-          onChange={handleInputChange}
           required
-          className="w-full p-2 border rounded"
+          value={formData.name}
+          onChange={handleChange}
+          className="w-full border p-2 rounded"
         />
         <input
-          type="email"
           name="email"
+          type="email"
           placeholder="Your Email"
+          required
           value={formData.email}
-          onChange={handleInputChange}
-          required
-          className="w-full p-2 border rounded"
+          onChange={handleChange}
+          className="w-full border p-2 rounded"
         />
-        <select
+        <input
           name="time"
-          value={formData.time}
-          onChange={handleInputChange}
+          type="time"
           required
-          className="w-full p-2 border rounded"
-        >
-          <option value="">Select Time</option>
-          <option>9:00 AM</option>
-          <option>11:00 AM</option>
-          <option>1:00 PM</option>
-          <option>3:00 PM</option>
-          <option>5:00 PM</option>
-        </select>
-
+          value={formData.time}
+          onChange={handleChange}
+          className="w-full border p-2 rounded"
+        />
         <button
           type="submit"
-          className="bg-orange-600 text-white px-6 py-2 rounded hover:bg-orange-700 transition"
+          disabled={loading}
+          className="w-full bg-orange-500 text-white py-2 px-4 rounded hover:bg-orange-600"
         >
-          Confirm Booking
+          {loading ? "Booking..." : "Book Appointment"}
         </button>
-
         {submitted && (
-          <p className="text-green-600 mt-2 text-center">
-            Booking submitted! We'll be in touch.
+          <p className="text-green-600 text-center mt-4">
+            ✅ Appointment booked for {date.toDateString()} at {formData.time}!
           </p>
+        )}
+        {error && (
+          <p className="text-red-600 text-center mt-4">❌ Booking failed.</p>
         )}
       </form>
     </div>
@@ -114,4 +105,3 @@ const Schedule: React.FC = () => {
 };
 
 export default Schedule;
-
