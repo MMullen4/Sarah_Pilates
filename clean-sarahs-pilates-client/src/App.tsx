@@ -12,12 +12,17 @@ import Contact from "./pages/Contact";
 const Home: React.FC = () => {
   return (
     <div className="p-10 max-w-3xl mx-auto text-center">
+      <img
+        src="https://as2.ftcdn.net/v2/jpg/05/85/94/75/1000_F_585947577_bzC0PesLqbJRpmCCnqnTngwX78o0ZStt.jpg"
+        alt="Pilates class"
+        className="rounded-lg mb-6 w-full object-cover h-64"
+      />
       <h1 className="text-4xl font-bold text-orange-600 mb-4">
         Welcome to Pilates With Sarah!
       </h1>
       <p className="text-lg text-gray-700">
-        Empower and heal your mind and body through the strength of Pilates. Join us to
-        improve posture, flexibility, and overall well-being.
+        Empower and heal your mind and body through the strength of Pilates.
+        Join us to improve posture, flexibility, and overall well-being.
       </p>
     </div>
   );

@@ -12,7 +12,7 @@ const Schedule: React.FC = () => {
         Schedule a Session
       </h1>
       <img
-        src="https://images.unsplash.com/photo-1598970434795-0c54fe7c0642"
+        src="https://as2.ftcdn.net/v2/jpg/05/85/94/75/1000_F_585947577_bzC0PesLqbJRpmCCnqnTngwX78o0ZStt.jpg"
         alt="Pilates class"
         className="rounded-lg mb-6 w-full object-cover h-64"
       />
