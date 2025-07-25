@@ -19,6 +19,8 @@ export const typeDefs = gql`
 
   type Mutation {
     bookAppointment(input: BookingInput!): Booking
+    updateBooking(id: ID!, input: BookingInput!): Booking
+    deleteBooking(id: ID!): Boolean
   }
 
   type Query {

@@ -2,7 +2,12 @@ import React, { useState, useRef } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { useMutation } from "@apollo/client";
-import { BOOK_APPOINTMENT } from "../utils/mutations";
+import {
+  BOOK_APPOINTMENT,
+  UPDATE_BOOKING,
+  DELETE_BOOKING,
+} from "../graphql/mutations";
+
 
 const Schedule: React.FC = () => {
   const [date, setDate] = useState<Date>(new Date());
