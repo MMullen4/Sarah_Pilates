@@ -1,13 +1,13 @@
-import React, { useEffect, useRef, useState } from "react";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
-import { useMutation, useQuery } from "@apollo/client";
+import React, { useEffect, useRef, useState } from "react"; // import React and hooks for state management
+import Calendar from "react-calendar"; // gets the calendar component for date selection
+import "react-calendar/dist/Calendar.css"; // gets the default styles for the calendar component
+import { useMutation, useQuery } from "@apollo/client"; // gets the useMutation and useQuery hooks from Apollo Client
 import {
   BOOK_APPOINTMENT,
   UPDATE_BOOKING,
   DELETE_BOOKING,
-} from "../graphql/mutations";
-import { GET_BOOKINGS } from "../graphql/queries";
+} from "../graphql/mutations"; // adjust the import path as needed
+import { GET_BOOKINGS } from "../graphql/queries"; // import the query to get bookings
 
 interface Booking {
   _id: string;
@@ -18,6 +18,7 @@ interface Booking {
 }
 
 const formatTime12Hour = (time24: string) => {
+  // converts 24-hour time to 12-hour format
   const [hourStr, minutes] = time24.split(":");
   let hour = parseInt(hourStr, 10);
   const ampm = hour >= 12 ? "PM" : "AM";
@@ -26,7 +27,18 @@ const formatTime12Hour = (time24: string) => {
   return `${hour}:${minutes}${ampm}`;
 };
 
+// Add this helper function that adds minutes to a time string in HH:MM format
+const addMinutes = (time24: string, minutes: number) => {
+  const [hourStr, minuteStr] = time24.split(":");
+  const totalMinutes = parseInt(hourStr) * 60 + parseInt(minuteStr) + minutes;
+  const newHour = Math.floor(totalMinutes / 60);
+  const newMinute = totalMinutes % 60;
+  return `${newHour.toString().padStart(2, "0")}:${newMinute.toString().padStart(2, "0")}`;
+};
+
+
 const Schedule: React.FC = () => {
+  // main component for scheduling appointments
   const [date, setDate] = useState<Date>(new Date());
   const [formData, setFormData] = useState({ name: "", email: "", time: "" });
   const [submitted, setSubmitted] = useState(false);
@@ -40,6 +52,7 @@ const Schedule: React.FC = () => {
   // Use a ref to reset the form after submission
   const formRef = useRef<HTMLFormElement>(null);
 
+  // GraphQL queries and mutations for managing bookings
   const { data, loading: bookingsLoading, refetch } = useQuery(GET_BOOKINGS);
   const bookings: Booking[] = data?.getBookings || [];
 
@@ -47,16 +60,16 @@ const Schedule: React.FC = () => {
   const [updateBooking] = useMutation(UPDATE_BOOKING);
   const [deleteBooking] = useMutation(DELETE_BOOKING);
 
-  const handleChange = (
+  const handleChange = ( // handles input changes in the form
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => { // handles form submission for booking appointments
     e.preventDefault();
     try {
-      const isoDate = date.getTime().toString(); // store as Unix timestamp string
+      const isoDate = date.getTime().toString(); // store as Unix timestamp string; will need to convert to ISO string if required by backend
 
       if (selectedBooking) {
         await updateBooking({
@@ -84,6 +97,7 @@ const Schedule: React.FC = () => {
         });
       }
 
+      // Reset form and show confirmation
       setConfirmation({ date, time: formData.time });
       setSubmitted(true);
       setFormData({ name: "", email: "", time: "" });
@@ -113,19 +127,20 @@ const Schedule: React.FC = () => {
     setDate(new Date(parseInt(booking.date))); // convert from Unix timestamp
   };
 
-  const isSameDay = (d1: Date, d2: Date) =>
+  const isSameDay = (d1: Date, d2: Date) => // checks if two dates are the same day
     d1.toDateString() === d2.toDateString();
 
-  const isPastDate = (d: Date) => {
+  const isPastDate = (d: Date) => { // checks if a date is in the past
     const today = new Date();
     return d.setHours(0, 0, 0, 0) < today.setHours(0, 0, 0, 0);
   };
 
+  // filter booked times for the selected date
   const bookedTimes = bookings
-    .filter((b) => isSameDay(new Date(parseInt(b.date)), date))
-    .map((b) => b.time);
+    .filter((b) => isSameDay(new Date(parseInt(b.date)), date)) // checks if the booking date matches the selected date
+    .map((b) => b.time); // extracts the time from each booking
 
-  return (
+  return ( // renders the main scheduling component
     <div className="p-6 max-w-4xl mx-auto bg-white shadow-md rounded-lg mt-10">
       <h1 className="text-3xl font-bold text-orange-600 mb-4 text-center">
         Schedule a Session
@@ -181,10 +196,10 @@ const Schedule: React.FC = () => {
           className="w-full border p-2 rounded"
         >
           <option value="">Select Time</option>
-          {Array.from({ length: 10 }, (_, i) => {
-            const hour = 8 + i; // 8:00 to 17:00
-            const timeString = `${hour.toString().padStart(2, "0")}:00`;
-            const isBooked = bookedTimes.includes(timeString);
+          {Array.from({ length: 10 }, (_, i) => { // generates time options from 8:00am to 5:00pm
+            const hour = 8 + i; // starts from 8am
+            const timeString = `${hour.toString().padStart(2, "0")}:00`; // formats time as HH:MM
+            const isBooked = bookedTimes.includes(timeString); // checks if the time is already booked
             return (
               <option key={timeString} value={timeString} disabled={isBooked}>
                 {formatTime12Hour(timeString)} {isBooked ? " (Booked)" : ""}
@@ -200,11 +215,11 @@ const Schedule: React.FC = () => {
           {selectedBooking ? "Update Booking" : "Book Appointment"}
         </button>
 
-        {submitted && confirmation && (
+        {submitted && confirmation && ( // displays confirmation message after successful booking
           <p className="text-green-600 text-center mt-4">
             ✅ Appointment {selectedBooking ? "updated" : "booked"} for{" "}
-            {confirmation.date.toDateString()} at{" "}
-            {formatTime12Hour(confirmation.time)}!
+            {confirmation.date.toDateString()} from{" "}
+            {formatTime12Hour(confirmation.time)} to {formatTime12Hour(addMinutes(confirmation.time, 50))}!
           </p>
         )}
       </form>
