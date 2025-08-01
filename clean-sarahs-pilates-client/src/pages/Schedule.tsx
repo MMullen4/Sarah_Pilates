@@ -33,9 +33,10 @@ const addMinutes = (time24: string, minutes: number) => {
   const totalMinutes = parseInt(hourStr) * 60 + parseInt(minuteStr) + minutes;
   const newHour = Math.floor(totalMinutes / 60);
   const newMinute = totalMinutes % 60;
-  return `${newHour.toString().padStart(2, "0")}:${newMinute.toString().padStart(2, "0")}`;
+  return `${newHour.toString().padStart(2, "0")}:${newMinute
+    .toString()
+    .padStart(2, "0")}`;
 };
-
 
 const Schedule: React.FC = () => {
   // main component for scheduling appointments
@@ -60,14 +61,20 @@ const Schedule: React.FC = () => {
   const [updateBooking] = useMutation(UPDATE_BOOKING);
   const [deleteBooking] = useMutation(DELETE_BOOKING);
 
-  const handleChange = ( // handles input changes in the form
+  const handleChange = (
+    // handles input changes in the form
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => { // handles form submission for booking appointments
+  const handleSubmit = async (e: React.FormEvent) => {
+    // handles form submission for booking appointments
     e.preventDefault();
+
+    const token = localStorage.getItem("token");
+    console.log("Current JWT token:", token);
+
     try {
       const isoDate = date.getTime().toString(); // store as Unix timestamp string; will need to convert to ISO string if required by backend
 
@@ -109,6 +116,9 @@ const Schedule: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
+    const token = localStorage.getItem("token");
+    console.log("Current JWT token (delete):", token);
+
     try {
       await deleteBooking({ variables: { id } });
       await refetch();
@@ -127,10 +137,13 @@ const Schedule: React.FC = () => {
     setDate(new Date(parseInt(booking.date))); // convert from Unix timestamp
   };
 
-  const isSameDay = (d1: Date, d2: Date) => // checks if two dates are the same day
-    d1.toDateString() === d2.toDateString();
+  const isSameDay = (
+    d1: Date,
+    d2: Date // checks if two dates are the same day
+  ) => d1.toDateString() === d2.toDateString();
 
-  const isPastDate = (d: Date) => { // checks if a date is in the past
+  const isPastDate = (d: Date) => {
+    // checks if a date is in the past
     const today = new Date();
     return d.setHours(0, 0, 0, 0) < today.setHours(0, 0, 0, 0);
   };
@@ -140,7 +153,8 @@ const Schedule: React.FC = () => {
     .filter((b) => isSameDay(new Date(parseInt(b.date)), date)) // checks if the booking date matches the selected date
     .map((b) => b.time); // extracts the time from each booking
 
-  return ( // renders the main scheduling component
+  return (
+    // renders the main scheduling component
     <div className="p-6 max-w-4xl mx-auto bg-white shadow-md rounded-lg mt-10">
       <h1 className="text-3xl font-bold text-orange-600 mb-4 text-center">
         Schedule a Session
@@ -196,7 +210,8 @@ const Schedule: React.FC = () => {
           className="w-full border p-2 rounded"
         >
           <option value="">Select Time</option>
-          {Array.from({ length: 10 }, (_, i) => { // generates time options from 8:00am to 5:00pm
+          {Array.from({ length: 10 }, (_, i) => {
+            // generates time options from 8:00am to 5:00pm
             const hour = 8 + i; // starts from 8am
             const timeString = `${hour.toString().padStart(2, "0")}:00`; // formats time as HH:MM
             const isBooked = bookedTimes.includes(timeString); // checks if the time is already booked
@@ -215,52 +230,61 @@ const Schedule: React.FC = () => {
           {selectedBooking ? "Update Booking" : "Book Appointment"}
         </button>
 
-        {submitted && confirmation && ( // displays confirmation message after successful booking
-          <p className="text-green-600 text-center mt-4">
-            ✅ Appointment {selectedBooking ? "updated" : "booked"} for{" "}
-            {confirmation.date.toDateString()} from{" "}
-            {formatTime12Hour(confirmation.time)} to {formatTime12Hour(addMinutes(confirmation.time, 50))}!
-          </p>
-        )}
+        {submitted &&
+          confirmation && ( // displays confirmation message after successful booking
+            <p className="text-green-600 text-center mt-4">
+              ✅ Appointment {selectedBooking ? "updated" : "booked"} for{" "}
+              {confirmation.date.toDateString()} from{" "}
+              {formatTime12Hour(confirmation.time)} to{" "}
+              {formatTime12Hour(addMinutes(confirmation.time, 50))}!
+            </p>
+          )}
       </form>
 
       <div className="mt-10">
         <h2 className="text-xl font-semibold mb-4 text-orange-700 text-center">
           Existing Bookings
         </h2>
-        {bookings.map((booking) => (
-          <div
-            key={booking._id}
-            className="border rounded p-4 mb-3 flex justify-between items-center"
-          >
-            <div>
-              <p>
-                📅{" "}
-                <strong>
-                  {new Date(parseInt(booking.date)).toDateString()}
-                </strong>{" "}
-                at <strong>{formatTime12Hour(booking.time)}</strong>
-              </p>
-              <p className="text-sm text-gray-600">
-                {booking.name} ({booking.email})
-              </p>
+        {bookings
+          .filter((booking) => {
+            const timestamp = parseInt(booking.date);
+            if (isNaN(timestamp)) return false; // Exclude invalid timestamp
+            const bookingDate = new Date(timestamp);
+            return !isPastDate(bookingDate); // Keep only today and future
+          })
+          .map((booking) => (
+            <div
+              key={booking._id}
+              className="border rounded p-4 mb-3 flex justify-between items-center"
+            >
+              <div>
+                <p>
+                  📅{" "}
+                  <strong>
+                    {new Date(parseInt(booking.date)).toDateString()}
+                  </strong>{" "}
+                  at <strong>{formatTime12Hour(booking.time)}</strong>
+                </p>
+                <p className="text-sm text-gray-600">
+                  {booking.name} ({booking.email})
+                </p>
+              </div>
+              <div className="space-x-2">
+                <button
+                  onClick={() => handleEdit(booking)}
+                  className="bg-yellow-400 px-3 py-1 rounded"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(booking._id)}
+                  className="bg-red-500 text-white px-3 py-1 rounded"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
-            <div className="space-x-2">
-              <button
-                onClick={() => handleEdit(booking)}
-                className="bg-yellow-400 px-3 py-1 rounded"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(booking._id)}
-                className="bg-red-500 text-white px-3 py-1 rounded"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        ))}
+          ))}
       </div>
     </div>
   );

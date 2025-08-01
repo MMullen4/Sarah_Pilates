@@ -1,13 +1,16 @@
+// models/Booking.ts
 import mongoose from "mongoose";
 
-const bookingSchema = new mongoose.Schema(
-  {
-    name: { type: String, required: true },
-    email: { type: String, required: true },
-    date: { type: Date, required: true },
-    time: { type: String, required: true },
+const bookingSchema = new mongoose.Schema({
+  name: String,
+  email: String,
+  date: String,
+  time: String,
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
   },
-  { timestamps: true }
-);
+});
 
 export default mongoose.model("Booking", bookingSchema);

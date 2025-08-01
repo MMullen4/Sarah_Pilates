@@ -10,11 +10,18 @@ import jwt from "jsonwebtoken";
 
 dotenv.config();
 
-const getUserFromToken = (token: string) => {
+const getUserFromToken = (token: string) => { // Function to decode JWT token
   try {
-    if (!token) return null;
-    return jwt.verify(token, process.env.JWT_SECRET!);
-  } catch {
+    if (!token) {
+      console.log("No token provided");
+      return null;
+    }
+    console.log("Verifying token:", token.substring(0, 20) + "...");
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!);
+    console.log("Token verified, user:", decoded);
+    return decoded;
+  } catch (error) {
+    console.log("Token verification failed:", (error as Error).message);
     return null;
   }
 };
@@ -35,11 +42,14 @@ const startServer = async () => {
   app.use(express.json());
 
   app.use(
+    // This line sets up the GraphQL endpoint
     "/graphql",
     expressMiddleware(server, {
       context: async ({ req }) => {
         const token = req.headers.authorization || "";
+        console.log("Authorization header:", token);
         const user = getUserFromToken(token.replace("Bearer ", ""));
+        console.log("Context user:", user);
         return { user };
       },
     })

@@ -2,27 +2,27 @@ import mongoose, { Document } from "mongoose";
 import bcrypt from "bcryptjs";
 
 interface IUser extends Document {
-  // Represents a user document in MongoDB
   username: string;
   email: string;
   password: string;
+  role: "user" | "admin";
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
-const userSchema = new mongoose.Schema( // Define the user schema
+const userSchema = new mongoose.Schema(
   {
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+    role: { type: String, enum: ["user", "admin"], default: "user" },
   },
-  { timestamps: true } // Automatically manage createdAt and updatedAt fields
+  { timestamps: true }
 );
 
 // Hash password before saving
 userSchema.pre("save", async function (next) {
-  // Pre-save hook to hash password
-  if (!this.isModified("password")) return next(); // Skip hashing if password is not modified
-  this.password = await bcrypt.hash(this.password, 10); // Hash the password with bcrypt
+  if (!this.isModified("password")) return next();
+  this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 

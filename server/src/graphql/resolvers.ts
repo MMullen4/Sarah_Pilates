@@ -1,5 +1,5 @@
 import Booking from "../models/Booking";
-import User from "../models/User"; // You'll need to create this model if it doesn't exist
+import User from "../models/User";
 import nodemailer from "nodemailer";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -8,8 +8,12 @@ const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 
 const generateToken = (user: any) => {
   return jwt.sign(
-    { id: user._id, email: user.email },
-    process.env.JWT_SECRET!,
+    {
+      id: user._id,
+      email: user.email,
+      role: user.role,
+    },
+    JWT_SECRET,
     { expiresIn: "7d" }
   );
 };
@@ -38,12 +42,16 @@ export const resolvers = {
   },
 
   Mutation: {
-    // mutations for creating, updating, deleting, registering, and logging in users
     register: async (_: any, { input }: any) => {
-      const user = await User.create(input);
+      const isSarah = input.email === "sarah@example.com";
+      const user = await User.create({
+        ...input,
+        role: isSarah ? "admin" : "user",
+      });
       const token = generateToken(user);
       return { token, user };
     },
+
     login: async (_: any, { input }: any) => {
       const user = await User.findOne({ email: input.email });
       if (!user || !(await user.comparePassword(input.password))) {
@@ -55,16 +63,38 @@ export const resolvers = {
 
     bookAppointment: async (_: any, { input }: any, context: any) => {
       if (!context.user) throw new Error("Unauthorized");
-      return await Booking.create(input);
+
+      return await Booking.create({
+        ...input,
+        user: context.user.id,
+      });
     },
 
     updateBooking: async (_: any, { id, input }: any, context: any) => {
       if (!context.user) throw new Error("Unauthorized");
+
+      const booking = await Booking.findById(id);
+      if (!booking) throw new Error("Booking not found");
+
+      const isAdmin = context.user.role === "admin";
+      if (!isAdmin && booking.user.toString() !== context.user.id) {
+        throw new Error("Forbidden: You can only update your own appointments");
+      }
+
       return await Booking.findByIdAndUpdate(id, input, { new: true });
     },
 
     deleteBooking: async (_: any, { id }: any, context: any) => {
       if (!context.user) throw new Error("Unauthorized");
+
+      const booking = await Booking.findById(id);
+      if (!booking) throw new Error("Booking not found");
+
+      const isAdmin = context.user.role === "admin";
+      if (!isAdmin && booking.user.toString() !== context.user.id) {
+        throw new Error("Forbidden: You can only delete your own appointments");
+      }
+
       const result = await Booking.findByIdAndDelete(id);
       return !!result;
     },
@@ -92,17 +122,6 @@ export const resolvers = {
         console.error("❌ Email failed:", error);
         return false;
       }
-    },
-
-    signup: async (_: any, { input }: any) => {
-      const hashedPassword = await bcrypt.hash(input.password, 10);
-      const user = await User.create({
-        username: input.username,
-        email: input.email,
-        password: hashedPassword,
-      });
-      const token = jwt.sign({ _id: user._id }, JWT_SECRET);
-      return { token, user };
     },
   },
 };
