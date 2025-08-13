@@ -1,16 +1,23 @@
 import { ApolloClient, InMemoryCache, createHttpLink } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
 
-// This file initializes the Apollo Client for GraphQL communication.
-// set up the HTTP link to your GraphQL server endpoint / API.
+// Choose the GraphQL URI based on environment:
+// - Dev: Vite dev app (5173) talks to Express at 3000
+// - Prod: same-origin (served by Express), so just "/graphql"
+// (You can still override both with VITE_GRAPHQL_URI if you want.)
+const uri = import.meta.env.DEV
+  ? import.meta.env.VITE_GRAPHQL_URI || "http://localhost:3000/graphql"
+  : import.meta.env.VITE_GRAPHQL_URI || "/graphql";
+
 const httpLink = createHttpLink({
-  uri: import.meta.env.VITE_GRAPHQL_URI || "http://localhost:3001/graphql", // or your deployed endpoint
+  uri,
+  // Only needed if you rely on cookies; harmless otherwise:
+  credentials: "include",
 });
 
-// middleware to add the authentication token to the headers of each request
 const authLink = setContext((_, { headers }) => {
   const token = localStorage.getItem("token");
-  console.log("Using token:", token); // log the token for debugging
+  // console.log("Using token:", token); // optional
   return {
     headers: {
       ...headers,
@@ -19,7 +26,6 @@ const authLink = setContext((_, { headers }) => {
   };
 });
 
-// create the Apollo Client instance with the HTTP link and cache
 const client = new ApolloClient({
   link: authLink.concat(httpLink),
   cache: new InMemoryCache(),
