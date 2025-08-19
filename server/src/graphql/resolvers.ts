@@ -1,5 +1,5 @@
-import Booking from "../models/Booking";
-import User from "../models/User";
+import Booking from "../models/Booking.js";
+import User from "../models/User.js";
 import nodemailer from "nodemailer";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";

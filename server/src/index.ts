@@ -3,12 +3,14 @@ import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
 import cors from "cors";
 import dotenv from "dotenv";
-import connectDB from "./config/db";
-import typeDefs from "./graphql/typeDefs";
-import { resolvers } from "./graphql/resolvers";
-import jwt from "jsonwebtoken";
 
-// NEW: for ESM-safe __dirname + static paths
+// 👇 ESM requires explicit .js on relative imports at runtime
+import connectDB from "./config/db.js";
+import typeDefs from "./graphql/typeDefs.js";
+// If your resolvers live in ./graphql/resolvers/index.ts, use /index.js:
+import { resolvers } from "./graphql/resolvers.js";
+
+import jwt from "jsonwebtoken";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -49,14 +51,12 @@ const startServer = async () => {
       credentials: true,
     })
   );
-
   app.use(express.json());
 
   // HEALTHCHECK (Railway -> /health)
   app.get("/health", (_req, res) => res.status(200).send("ok"));
 
   // GRAPHQL ENDPOINT (keep BEFORE static + SPA fallback)
-  // This is the main GraphQL endpoint that Apollo Server will use
   app.use(
     "/graphql",
     expressMiddleware(server, {
@@ -68,21 +68,22 @@ const startServer = async () => {
     })
   );
 
-  // STATIC: serve the Vite build from client/dist
-  // When running from dist/, this resolves to ../../client/dist
-  const clientDist = path.resolve(__dirname, "../../client/dist");
+  // STATIC: serve the Vite build from your client folder
+  const clientDist = path.resolve(
+    __dirname,
+    "../../clean-sarahs-pilates-client/dist"
+  );
   app.use(express.static(clientDist));
 
   // SPA FALLBACK: after API routes
-  app.get("*", (_req, res) => { // catch-all route that serves index.html
+  app.get("*", (_req, res) => {
     res.sendFile(path.join(clientDist, "index.html"));
   });
 
-  // Prefer 3000 in prod so client uses same origin
   const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () =>
-    console.log(`🚀 Server ready on :${PORT} (GraphQL at /graphql)`)
-  );
+  app.listen(PORT, () => {
+    console.log(`🚀 Server ready on :${PORT} (GraphQL at /graphql)`);
+  });
 };
 
 startServer();
