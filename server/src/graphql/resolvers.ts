@@ -1,7 +1,7 @@
 import Booking from "../models/Booking.js";
 import User from "../models/User.js";
 import nodemailer from "nodemailer";
-import bcrypt from "bcryptjs";
+
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
