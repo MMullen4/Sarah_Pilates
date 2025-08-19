@@ -12,7 +12,5 @@
   },
   "engines": {
     "node": ">=18.18"
-  },
-  "type": "module",
-  "dependencies": {}
+  }
 }
