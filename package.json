@@ -2,12 +2,12 @@
   "name": "sarah_pilates_root",
   "private": true,
   "workspaces": [
-    "client",
+    "clean-sarahs-pilates-client",
     "server"
   ],
   "scripts": {
-    "postinstall": "npm --prefix client install && npm --prefix server install",
-    "build": "npm --prefix client run build && npm --prefix server run build",
+    "postinstall": "npm --prefix clean-sarahs-pilates-client install && npm --prefix server install",
+    "build": "npm --prefix clean-sarahs-pilates-client run build && npm --prefix server run build",
     "start": "node server/dist/index.js"
   },
   "engines": {
