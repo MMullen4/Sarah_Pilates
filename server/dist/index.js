@@ -2,7 +2,6 @@ import express from "express";
 import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
 import cors from "cors";
-import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import typeDefs from "./graphql/typeDefs.js";
 // If your resolvers are in a folder with index.ts, use the index.js path:
@@ -11,7 +10,11 @@ import jwt from "jsonwebtoken";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import fs from "node:fs";
-dotenv.config();
+// 👇 Load .env only in dev (not in Railway)
+if (process.env.NODE_ENV !== "production") {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    require("dotenv").config();
+}
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const getUserFromToken = (token) => {
