@@ -56,6 +56,7 @@ const startServer = async () => {
   app.get("/health", (_req, res) => res.status(200).send("ok"));
 
   // GRAPHQL ENDPOINT (keep BEFORE static + SPA fallback)
+  // This is the main GraphQL endpoint that Apollo Server will use
   app.use(
     "/graphql",
     expressMiddleware(server, {
@@ -73,7 +74,7 @@ const startServer = async () => {
   app.use(express.static(clientDist));
 
   // SPA FALLBACK: after API routes
-  app.get("*", (_req, res) => {
+  app.get("*", (_req, res) => { // catch-all route that serves index.html
     res.sendFile(path.join(clientDist, "index.html"));
   });
 

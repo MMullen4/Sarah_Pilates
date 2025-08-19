@@ -6,11 +6,12 @@
     "server"
   ],
   "scripts": {
-    "postinstall": "npm --prefix client install && npm --prefix server install",
+    "postinstall": "npm --prefix client ci --omit=dev=false && npm --prefix server ci --omit=dev=false",
     "build": "npm --prefix client run build && npm --prefix server run build",
     "start": "node server/dist/index.js"
   },
   "engines": {
     "node": ">=18.18"
-  }
+  },
+  "type": "module"
 }
