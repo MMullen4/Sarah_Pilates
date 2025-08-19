@@ -6,7 +6,7 @@
     "server"
   ],
   "scripts": {
-    "postinstall": "npm --prefix client ci --omit=dev=false && npm --prefix server ci --omit=dev=false",
+    "postinstall": "npm --prefix client install && npm --prefix server install",
     "build": "npm --prefix client run build && npm --prefix server run build",
     "start": "node server/dist/index.js"
   },
