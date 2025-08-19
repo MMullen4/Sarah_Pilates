@@ -5,10 +5,10 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 // 👇 ESM requires explicit .js on relative imports at runtime
-import connectDB from "./config/db.js";
-import typeDefs from "./graphql/typeDefs.js";
+import connectDB from "./config/db";
+import typeDefs from "./graphql/typeDefs";
 // If your resolvers live in ./graphql/resolvers/index.ts, use /index.js:
-import { resolvers } from "./graphql/resolvers.js";
+import { resolvers } from "./graphql/resolvers";
 
 import jwt from "jsonwebtoken";
 import path from "node:path";
