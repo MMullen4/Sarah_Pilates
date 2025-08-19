@@ -1,18 +1,17 @@
 # nixpacks.toml (place at repo root)
 
 [phases.setup]
-# Pin Node 18 for build/run
-nixpkgs = ["nodejs_18"]
+nixpkgs = ["nodejs_20"]
 
 [phases.install]
-# Install root deps (which triggers workspaces via npm)
-# We need dev deps for TypeScript/Vite builds, so DO NOT omit dev
-cmds = ["npm install"]
+cmds = [
+  "npm install --legacy-peer-deps",
+  "cd client && npm install --legacy-peer-deps",
+  "cd server && npm install --legacy-peer-deps"
+]
 
 [phases.build]
-# Builds client then server via your root "build" script
 cmds = ["npm run build"]
 
 [start]
-# Starts your compiled server which also serves the Vite build
 cmd = "npm start"
