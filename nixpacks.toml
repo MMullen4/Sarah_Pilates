@@ -4,11 +4,7 @@
 nixpkgs = ["nodejs_20"]
 
 [phases.install]
-cmds = [
-  "npm install --legacy-peer-deps",
-  "cd client && npm install --legacy-peer-deps",
-  "cd server && npm install --legacy-peer-deps"
-]
+cmds = ["npm install"]
 
 [phases.build]
 cmds = ["npm run build"]
