@@ -7,7 +7,7 @@ nixpkgs = ["nodejs_18"]
 [phases.install]
 # Install root deps (which triggers workspaces via npm)
 # We need dev deps for TypeScript/Vite builds, so DO NOT omit dev
-cmds = ["npm ci"]
+cmds = ["npm install"]
 
 [phases.build]
 # Builds client then server via your root "build" script
