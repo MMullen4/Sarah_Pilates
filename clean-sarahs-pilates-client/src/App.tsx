@@ -1,6 +1,7 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
+import { Toaster } from "react-hot-toast";
 
 // Page components
 import About from "./pages/About";
@@ -39,6 +40,7 @@ const App: React.FC = () => {
         <Route path="/schedule" element={<Schedule />} />
         <Route path="/services" element={<Services />} />
         <Route path="/contact" element={<Contact />} />
+        <Toaster position="top-right" />
       </Routes>
     </div>
   );

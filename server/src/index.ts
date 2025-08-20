@@ -17,7 +17,7 @@ import fs from "node:fs";
 // 👇 Load .env only in dev (not in Railway)
 if (process.env.NODE_ENV !== "production") {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  require("dotenv").config();
+  dotenv.config();
 }
 
 const __filename = fileURLToPath(import.meta.url);
@@ -44,16 +44,15 @@ const startServer = async () => {
   app.use(
     cors({
       origin:
-        process.env.NODE_ENV === "production"
-          ? undefined
-          : "http://localhost:5173",
+        process.env.NODE_ENV === "production" ? false : "http://localhost:5173",
       credentials: true,
     })
   );
+
   app.use(express.json());
 
   // Healthcheck
-  app.get("/health", (_req, res) => res.status(200).send("ok"));
+  app.get("/health", (_req, res) => res.status(200).send("okee dokee"));
 
   // Apollo
   const server = new ApolloServer({ typeDefs, resolvers });
@@ -69,14 +68,17 @@ const startServer = async () => {
     })
   );
 
-  // Serve client (log if dist missing)
+  // Serve client (with caching rules)
   if (!fs.existsSync(clientDist)) {
     console.warn(`[WARN] Client dist not found at ${clientDist}`);
   } else {
-    app.use(express.static(clientDist));
-    app.get("*", (_req, res) =>
-      res.sendFile(path.join(clientDist, "index.html"))
-    );
+    // Cache all static assets for a year, but don’t cache index.html
+    app.use(express.static(clientDist, { maxAge: "1y", index: false }));
+
+    app.get("*", (_req, res) => {
+      res.set("Cache-Control", "no-store"); // always fetch fresh index.html
+      res.sendFile(path.join(clientDist, "index.html"));
+    });
   }
 
   // ⬇️ Start HTTP FIRST so Railway sees it's alive
