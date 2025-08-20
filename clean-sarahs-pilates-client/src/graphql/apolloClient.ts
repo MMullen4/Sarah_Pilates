@@ -1,9 +1,10 @@
 // client/src/apolloClient.ts
 import { ApolloClient, InMemoryCache } from "@apollo/client";
 
-const uri =
-  import.meta.env.VITE_GRAPHQL_URI ||
-  (import.meta.env.DEV ? "http://localhost:3000/graphql" : "/graphql");
+const isDev = import.meta.env.DEV;
+const uri = isDev
+  ? import.meta.env.VITE_GRAPHQL_URI || "http://localhost:3000/graphql"
+  : `${window.location.origin}/graphql`; // <-- forces prod to your Railway origin
 
 export default new ApolloClient({
   uri,
