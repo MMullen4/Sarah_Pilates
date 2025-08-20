@@ -1,17 +1,16 @@
+// client/src/apolloClient.ts
 import { ApolloClient, InMemoryCache } from "@apollo/client";
 
-const uri = import.meta.env.DEV
-  ? "http://localhost:3000/graphql" // local dev server
-  : "/graphql"; // prod: same origin on Railway
+const uri =
+  import.meta.env.VITE_GRAPHQL_URI ||
+  (import.meta.env.DEV ? "http://localhost:3000/graphql" : "/graphql");
 
-const client = new ApolloClient({ // Create an Apollo Client instance
-  uri, // Set the GraphQL endpoint URI
-  cache: new InMemoryCache(), // Initialize the cache for Apollo Client 
+export default new ApolloClient({
+  uri,
+  cache: new InMemoryCache(),
   headers: {
-    authorization: localStorage.getItem("token") // Set the authorization header with the token from localStorage
-      ? `Bearer ${localStorage.getItem("token")}` // If a token exists, include it in the header
-      : "", // Otherwise, set it to an empty string
+    authorization: localStorage.getItem("token")
+      ? `Bearer ${localStorage.getItem("token")}`
+      : "",
   },
 });
-
-export default client;
