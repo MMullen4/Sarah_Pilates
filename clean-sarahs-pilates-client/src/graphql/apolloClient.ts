@@ -11,7 +11,7 @@ import toast from "react-hot-toast";
 
 const isDev = import.meta.env.DEV;
 const uri = isDev
-  ? import.meta.env.VITE_GRAPHQL_URI || "http://localhost:3000/graphql"
+  ? import.meta.env.VITE_GRAPHQL_URI || "http://localhost:3001/graphql"
   : `${window.location.origin}/graphql`;
 
 const authLink = new ApolloLink((operation, forward) => {
