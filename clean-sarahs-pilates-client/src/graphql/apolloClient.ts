@@ -9,10 +9,9 @@ import {
 import { onError } from "@apollo/client/link/error";
 import toast from "react-hot-toast";
 
-const isDev = import.meta.env.DEV;
-const uri = isDev
-  ? import.meta.env.VITE_GRAPHQL_URI || "http://localhost:3001/graphql"
-  : `${window.location.origin}/graphql`;
+const uri =
+  import.meta.env.VITE_GRAPHQL_URI ||
+  (import.meta.env.DEV ? "http://localhost:3001/graphql" : "/graphql");
 
 const authLink = new ApolloLink((operation, forward) => {
   const token = localStorage.getItem("token");
@@ -27,21 +26,16 @@ const authLink = new ApolloLink((operation, forward) => {
 
 const errorLink = onError(({ networkError, graphQLErrors }) => {
   if ((networkError as any)?.statusCode === 401) {
-    toast.error("Please log in to continue."); // 👈 user-facing toast
+    toast.error("Please log in to continue.");
   }
-
   if (graphQLErrors?.length) {
-    for (const err of graphQLErrors) {
-      toast.error(`Error: ${err.message}`);
-    }
+    for (const err of graphQLErrors) toast.error(`Error: ${err.message}`);
   }
 });
 
 const httpLink = createHttpLink({ uri });
 
-const client = new ApolloClient({
+export default new ApolloClient({
   link: from([errorLink, authLink, httpLink]),
   cache: new InMemoryCache(),
 });
-
-export default client;
