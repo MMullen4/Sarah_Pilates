@@ -1,14 +1,16 @@
 import mongoose from "mongoose";
 
-const connectDB = async () => { // Function to connect to MongoDB
-  const uri = process.env.MONGODB_URI; // Get MongoDB URI from environment variables
-  if (!uri) { // Check if the URI is defined
+const connectDB = async () => {
+  const uri = process.env.MONGODB_URI; // full connection string
+  if (!uri) {
     console.error("❌ MONGODB_URI is not defined in environment variables.");
-    process.exit(1); // Exit the process if URI is not defined
+    process.exit(1);
   }
 
-  try { // Try to connect to MongoDB
-    await mongoose.connect(uri); // Connect to MongoDB using the URI
+  try {
+    await mongoose.connect(uri, {
+      dbName: "sarahsPilates", // 👈 explicit, avoids confusion with "test"
+    });
     console.log("✅ MongoDB connected");
   } catch (error) {
     console.error("❌ MongoDB connection failed:", error);
@@ -16,4 +18,4 @@ const connectDB = async () => { // Function to connect to MongoDB
   }
 };
 
-export default connectDB; // Export the connectDB function for use in other parts of the application
+export default connectDB;
