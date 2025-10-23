@@ -1,38 +1,68 @@
+// src/index.ts
 import express from "express";
 import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
-import cors from "cors";
+import cors, { CorsOptions } from "cors";
 import dotenv from "dotenv";
-
-import connectDB from "./config/db.js";
-import typeDefs from "./graphql/typeDefs.js";
-// If your resolvers are in a folder with index.ts, use the index.js path:
-import { resolvers } from "./graphql/resolvers.js";
-
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import fs from "node:fs";
 
-// 👇 Load .env only in dev (not in Railway)
-if (process.env.NODE_ENV !== "production") {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  dotenv.config();
-}
+// import connectDB, { isDbConnected } from "./config/db.js";
+import connectDB, { isDbConnected } from "./config/db.js";
+import typeDefs from "./graphql/typeDefs.js";
+import { resolvers } from "./graphql/resolvers.js";
 
+// ---- dotenv: explicit paths (dev + built) ----
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const getUserFromToken = (token: string) => {
+// server/.env when running with tsx from src/
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
+// fallback to repo root .env (optional)
+if (!process.env.MONGODB_URI) {
+  dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+}
+
+const PORT = Number(process.env.PORT) || 3001;
+const NODE_ENV = process.env.NODE_ENV || "development";
+
+// ---- CORS: allow list via env (comma-separated), default localhost:5173 in dev ----
+const allowedOrigins =
+  process.env.ALLOWED_ORIGINS?.split(",")
+    .map((s) => s.trim())
+    .filter(Boolean) ||
+  (NODE_ENV === "development" ? ["http://localhost:5173"] : []);
+
+const corsOptions: CorsOptions = {
+  origin: (origin, cb) => {
+    // allow same-origin (no Origin header) and explicit allowlist
+    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    return cb(new Error(`CORS blocked: ${origin}`));
+  },
+  credentials: true,
+};
+
+// ---- JWT helper ----
+type UserClaims = JwtPayload & { id: string; email: string; role?: string };
+
+const getUserFromToken = (token?: string): UserClaims | null => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    console.error("❌ JWT_SECRET missing");
+    return null;
+  }
+  if (!token) return null;
   try {
-    if (!token) return null;
-    return jwt.verify(token, process.env.JWT_SECRET!);
+    const decoded = jwt.verify(token, secret);
+    return typeof decoded === "string" ? null : (decoded as UserClaims);
   } catch {
     return null;
   }
 };
 
-const PORT = Number(process.env.PORT) || 3000;
+// ---- static client path (only if you actually ship the client here) ----
 const clientDist = path.resolve(
   __dirname,
   "../../clean-sarahs-pilates-client/dist"
@@ -41,59 +71,69 @@ const clientDist = path.resolve(
 const startServer = async () => {
   const app = express();
 
-  app.use(
-    cors({
-      origin:
-        process.env.NODE_ENV === "production" ? false : "http://localhost:5173",
-      credentials: true,
-    })
+  // CORS + JSON
+  app.use(cors(corsOptions));
+  app.use(express.json({ limit: "1mb" }));
+
+  // Healthchecks
+  app.get("/health", (_req, res) => res.status(200).send("ok"));
+
+  app.get("/health/db", (_req, res) =>
+    res
+      .status(isDbConnected() ? 200 : 503)
+      .json({ dbConnected: isDbConnected() })
   );
-
-  app.use(express.json());
-
-  // Healthcheck
-  app.get("/health", (_req, res) => res.status(200).send("okee dokee"));
 
   // Apollo
   const server = new ApolloServer({ typeDefs, resolvers });
-  await server.start();
-  app.use(
-    "/graphql",
-    expressMiddleware(server, {
-      context: async ({ req }) => {
-        const token = (req.headers.authorization || "").replace("Bearer ", "");
-        const user = getUserFromToken(token);
-        return { user };
-      },
-    })
-  );
-
-  // Serve client (with caching rules)
-  if (!fs.existsSync(clientDist)) {
-    console.warn(`[WARN] Client dist not found at ${clientDist}`);
-  } else {
-    // Cache all static assets for a year, but don’t cache index.html
-    app.use(express.static(clientDist, { maxAge: "1y", index: false }));
-
-    app.get("*", (_req, res) => {
-      res.set("Cache-Control", "no-store"); // always fetch fresh index.html
-      res.sendFile(path.join(clientDist, "index.html"));
-    });
+  try {
+    await server.start(); // start Apollo server
+    app.use(
+      "/graphql",
+      expressMiddleware(server, {
+        context: async ({ req }) => {
+          const token = (req.headers.authorization || "").replace(
+            /^Bearer\s+/i,
+            ""
+          );
+          const user = getUserFromToken(token);
+          return { user };
+        },
+      })
+    );
+  } catch (error) {
+    console.error("❌ Apollo Server failed to start:", error);
+    process.exit(1);
   }
 
-  // ⬇️ Start HTTP FIRST so Railway sees it's alive
+  // Serve client if present (same-origin)
+  if (fs.existsSync(clientDist)) {
+    app.use(express.static(clientDist, { maxAge: "1y", index: false }));
+    app.get("*", (_req, res) => {
+      res.setHeader("Cache-Control", "no-store");
+      res.sendFile(path.join(clientDist, "index.html"));
+    });
+  } else {
+    console.warn(`[WARN] Client dist not found at ${clientDist}`);
+  }
+
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`🚀 HTTP listening on :${PORT} (GraphQL at /graphql)`);
+    console.log(
+      `🚀 HTTP listening on :${PORT} (${NODE_ENV}) • GraphQL at /graphql`
+    );
   });
 
-  // ⬇️ Connect DB AFTER starting HTTP; don't crash if it fails
+  // Connect DB after starting HTTP
   try {
     console.log("⏳ Connecting to MongoDB…");
     await connectDB();
     console.log("✅ MongoDB connected");
-  } catch (err) {
-    console.error("❌ MongoDB connection failed:", (err as Error).message);
+  } catch (err: any) {
+    console.error("❌ MongoDB connection failed:", err?.message || err);
   }
 };
 
-startServer().catch((e) => console.error("Fatal startup error:", e));
+startServer().catch((e) => {
+  console.error("Fatal startup error:", e);
+  process.exit(1);
+});

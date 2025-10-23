@@ -20,5 +20,7 @@ const connectDB = async () => {
     process.exit(1);
   }
 };
+export const isDbConnected = (): boolean =>
+  mongoose.connection.readyState === 1;
 
 export default connectDB;
