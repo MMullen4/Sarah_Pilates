@@ -8,6 +8,7 @@ export const GET_BOOKINGS = gql`
       email
       date
       time
+      user
     }
   }
 `;

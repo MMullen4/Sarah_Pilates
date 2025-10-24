@@ -21,8 +21,8 @@ const Home: React.FC = () => {
         Welcome to Pilates With Sarah!
       </h1>
       <p className="text-lg text-gray-700">
-        Empower and heal your mind and body through the strength of Pilates.
-        Join us to improve posture, flexibility, and overall well-being.
+        Empower your mind and heal your body through the strength of Pilates. Join
+        us to improve posture, flexibility, and overall well-being.
       </p>
     </div>
   );

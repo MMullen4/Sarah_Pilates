@@ -7,6 +7,7 @@ const typeDefs = gql`
     email: String!
     date: String!
     time: String!
+    user: ID! # 👈 Add this so client can check ownership
     createdAt: String
   }
 
@@ -43,15 +44,19 @@ const typeDefs = gql`
   type Query {
     me: User
     getBookings: [Booking!]!
-    services: [Service]
+    services: [Service!]!
   }
 
   type Mutation {
     register(input: SignupInput!): AuthPayload
     login(input: LoginInput!): AuthPayload
+
+    # Booking management
     bookAppointment(input: BookingInput!): Booking
     updateBooking(id: ID!, input: BookingInput!): Booking
     deleteBooking(id: ID!): Boolean
+
+    # Contact form
     sendContactEmail(name: String!, email: String!, message: String!): Boolean
   }
 
@@ -59,13 +64,6 @@ const typeDefs = gql`
     id: ID!
     name: String!
     description: String!
-  }
-
-  type Appointment {
-    id: ID!
-    name: String!
-    email: String!
-    date: String!
   }
 `;
 
