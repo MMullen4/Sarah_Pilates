@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "postinstall": "npm --prefix clean-sarahs-pilates-client install && npm --prefix server install",
-    "build": "npm --prefix clean-sarahs-pilates-client ci && npm --prefix clean-sarahs-pilates-client run build && npm --prefix server ci && npm --prefix server run build",
+    "build": "npm --prefix clean-sarahs-pilates-client install && npm --prefix clean-sarahs-pilates-client run build && npm --prefix server install && npm --prefix server run build",
     "start": "node server/dist/index.js"
   },
   "engines": {
