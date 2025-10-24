@@ -7,7 +7,7 @@ const typeDefs = gql`
     email: String!
     date: String!
     time: String!
-    user: ID! # 👈 Add this so client can check ownership
+    user: ID! 
     createdAt: String
   }
 
