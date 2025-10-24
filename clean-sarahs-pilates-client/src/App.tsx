@@ -3,7 +3,6 @@ import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import { Toaster } from "react-hot-toast";
 
-// Page components
 import About from "./pages/About";
 import Studio from "./pages/Studio";
 import Schedule from "./pages/Schedule";
@@ -33,6 +32,10 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
+
+      {/* Toaster must NOT be inside <Routes> */}
+      <Toaster position="top-right" />
+
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
@@ -40,7 +43,6 @@ const App: React.FC = () => {
         <Route path="/schedule" element={<Schedule />} />
         <Route path="/services" element={<Services />} />
         <Route path="/contact" element={<Contact />} />
-        <Toaster position="top-right" />
       </Routes>
     </div>
   );
