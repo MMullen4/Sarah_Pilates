@@ -1,27 +1,29 @@
+// src/main.tsx or src/index.tsx
+import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { ApolloProvider } from "@apollo/client";
+
 import App from "./App";
-
-import { ErrorBoundary } from "./ErrorBoundry";
-import React from "react";
-
 import client from "./utils/apolloClient";
-
+import { ErrorBoundary } from "./ErrorBoundary"; // <-- make sure file name matches
 import "./index.css";
 
-// const root = ReactDOM.createRoot(document.getElementById("root")!);
-// root.render(
-//   <ApolloProvider client={client}>
-//     <BrowserRouter>
-//       <App />
-//     </BrowserRouter>
-//   </ApolloProvider>
-// );
-ReactDOM.createRoot(document.getElementById("root")!).render(
+const rootEl = document.getElementById("root");
+if (!rootEl) throw new Error("❌ #root not found in index.html");
+
+ReactDOM.createRoot(rootEl).render(
   <React.StrictMode>
-    <ErrorBoundary>
-      <App />
-    </ErrorBoundary>
+    <ApolloProvider client={client}>
+      <BrowserRouter>
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>
+      </BrowserRouter>
+    </ApolloProvider>
   </React.StrictMode>
 );
+
+// quick probes to debug “blank page”
+console.log("[Boot] React app mounted");
+(window as any).__APP_MOUNTED = true;
