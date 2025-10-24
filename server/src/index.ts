@@ -72,7 +72,19 @@ const startServer = async () => {
   const app = express();
 
   // CORS + JSON
-  app.use(cors(corsOptions));
+  // app.use(cors(corsOptions));
+  if (NODE_ENV === "development") {
+    app.use(
+      cors({
+        origin: ["http://localhost:5173"],
+        credentials: true,
+      })
+    );
+  } else {
+    // Same-origin in prod → no CORS needed
+    // If you ever split domains, flip this to cors({ origin: ["https://www.sarah-pilates-mb.com"], credentials: true })
+  }
+
   app.use(express.json({ limit: "1mb" }));
 
   // Healthchecks
@@ -106,16 +118,21 @@ const startServer = async () => {
     process.exit(1);
   }
 
-  // Serve client if present (same-origin)
-  if (fs.existsSync(clientDist)) {
-    app.use(express.static(clientDist, { maxAge: "1y", index: false }));
-    app.get("*", (_req, res) => {
-      res.setHeader("Cache-Control", "no-store");
-      res.sendFile(path.join(clientDist, "index.html"));
-    });
-  } else {
-    console.warn(`[WARN] Client dist not found at ${clientDist}`);
-  }
+  // Serve client in production
+ if (fs.existsSync(clientDist)) {
+   app.use(express.static(clientDist, { maxAge: "1y" })); // no need for index:false
+
+   app.get("*", (req, res, next) => {
+     // never intercept API or other server routes
+     if (req.path.startsWith("/graphql") || req.path.startsWith("/health"))
+       return next();
+     res.setHeader("Cache-Control", "no-store");
+     res.sendFile(path.join(clientDist, "index.html"));
+   });
+ } else {
+   console.warn(`[WARN] Client dist not found at ${clientDist}`);
+ }
+
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(
