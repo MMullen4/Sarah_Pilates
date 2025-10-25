@@ -58,14 +58,18 @@ const Schedule: React.FC = () => {
   const [deleteBooking] = useMutation(DELETE_BOOKING);
 
   // decode JWT to identify current user
-  const currentUserEmail = React.useMemo(() => {
+  const currentUser = React.useMemo(() => {
     const token = localStorage.getItem("token");
-    if (!token) return null;
+    if (!token) return { id: null, email: null };
     try {
-      const payload = JSON.parse(atob(token.split(".")[1] || ""));
-      return payload?.email ?? null;
+      const base64Url = token.split(".")[1] ?? "";
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const payload = JSON.parse(
+        decodeURIComponent(escape(window.atob(base64)))
+      );
+      return { id: payload?.id ?? null, email: payload?.email ?? null };
     } catch {
-      return null;
+      return { id: null, email: null };
     }
   }, []);
 
@@ -75,18 +79,17 @@ const Schedule: React.FC = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // SUBMIT (when updating an existing booking): block if not owner
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const isoDate = date.getTime().toString();
 
     try {
       if (selectedBooking) {
-        // 🔹 Ownership check for edit
-        if (selectedBooking.email !== currentUserEmail) {
+        if (!currentUser.email || selectedBooking.email !== currentUser.email) {
           toast.error("You can only edit your own appointments");
           return;
         }
-
         await updateBooking({
           variables: {
             id: selectedBooking._id,
@@ -118,34 +121,35 @@ const Schedule: React.FC = () => {
       setSubmitted(true);
       setFormData({ name: "", email: "", time: "" });
       await refetch();
-    } catch (err) {
+    } catch (err: any) {
+      // Surface the backend message (e.g., "You can only update your own appointments")
+      const msg = err?.message || "Something went wrong while booking";
+      toast.error(msg);
       console.error("Booking error:", err);
-      toast.error("Something went wrong while booking");
     }
   };
 
   const handleDelete = async (booking: Booking) => {
-    if (booking.email !== currentUserEmail) {
+    if (!currentUser.email || booking.email !== currentUser.email) {
       toast.error("You can only remove your own appointments");
       return;
     }
-
     try {
       await deleteBooking({ variables: { id: booking._id } });
       await refetch();
       toast.success("Appointment removed");
-    } catch (err) {
+    } catch (err: any) {
+      const msg = err?.message || "Failed to remove appointment";
+      toast.error(msg);
       console.error("Delete failed:", err);
-      toast.error("Failed to remove appointment");
     }
   };
 
   const handleEdit = (booking: Booking) => {
-    if (booking.email !== currentUserEmail) {
+    if (!currentUser.email || booking.email !== currentUser.email) {
       toast.error("You can only edit your own appointments");
       return;
     }
-
     setSelectedBooking(booking);
     setFormData({
       name: booking.name,
