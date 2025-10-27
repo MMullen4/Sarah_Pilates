@@ -15,6 +15,7 @@ export const REGISTER_USER = gql`
 `;
 
 // nest login variables under input to match the server's expected structure
+// this also allows for future expansion without changing the mutation signature
 export const LOGIN_USER = gql`
   mutation Login($input: LoginInput!) {
     login(input: $input) {

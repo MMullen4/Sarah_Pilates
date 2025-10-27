@@ -3,16 +3,22 @@ import User from "../models/User.js";
 import nodemailer from "nodemailer";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
+// const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 
 const generateToken = (user: any) => {
+  const secret =
+    process.env.JWT_SECRET ||
+    process.env.JWT_SECRET_KEY ||
+    "dev-only-supersecret";
+  
   return jwt.sign(
     {
       id: user._id,
       email: user.email,
       role: user.role,
+      username: user.username,
     },
-    JWT_SECRET,
+    secret,
     { expiresIn: "7d" }
   );
 };
@@ -76,9 +82,11 @@ export const resolvers = {
 
     // ✅ Create a booking
     bookAppointment: async (_: any, { input }: any, context: any) => {
-      if (!context.user) throw new Error("Unauthorized");
+      if (!context.user) throw new Error("Unauthorized - Please sign up or log in");
 
-      // Optional: prevent double-booking
+      const user = await User.findById(context.user.id);
+      if (!user) throw new Error("User not found");
+
       const exists = await Booking.findOne({
         date: input.date,
         time: input.time,
@@ -87,6 +95,8 @@ export const resolvers = {
 
       return await Booking.create({
         ...input,
+        name: user.username,
+        email: user.email,
         user: context.user.id,
       });
     },
@@ -114,6 +124,16 @@ export const resolvers = {
 
       const booking = await Booking.findById(id);
       if (!booking) throw new Error("Booking not found");
+
+      // Debug logging
+      console.log("Current user ID:", context.user.id);
+      console.log("Booking user ID:", booking.user);
+      console.log("Booking user toString():", booking.user.toString());
+      console.log(
+        "Are they equal?",
+        booking.user.toString() === context.user.id
+      );
+      console.log("User role:", context.user.role);
 
       const isAdmin = context.user.role === "admin";
       if (!isAdmin && booking.user.toString() !== context.user.id) {
