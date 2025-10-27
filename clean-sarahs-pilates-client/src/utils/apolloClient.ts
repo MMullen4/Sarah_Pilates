@@ -1,5 +1,6 @@
-import { ApolloClient, InMemoryCache, createHttpLink } from "@apollo/client";
+import { ApolloClient, InMemoryCache, createHttpLink, ApolloLink , from } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
+import { onError } from "@apollo/client/link/error";
 
 const isDev = import.meta.env.DEV;
 
@@ -14,27 +15,38 @@ console.log("[Apollo] GraphQL URI:", uri);
 
 // HTTP link to connect to the GraphQL server
 const httpLink = createHttpLink({
-  uri,
-  // Only needed if you rely on cookies; harmless otherwise:
+  uri: uri, // Use the uri variable instead of hardcoded localhost:3001
   credentials: "include",
 });
 
-// auth middleware to attach JWT token from localStorage to each request
-const authLink = setContext((_, { headers }) => {
+const authAndCsrfLink = new ApolloLink((operation, forward) => {
   const token = localStorage.getItem("token");
-  // console.log("Using token:", token); // optional
-  return {
+
+  operation.setContext(({ headers = {} }) => ({
     headers: {
       ...headers,
       authorization: token ? `Bearer ${token}` : "",
+      "apollo-require-preflight": "true", // 👈 forces preflight Apollo accepts
+      "content-type": "application/json", // 👈 ensure non-simple content type
     },
-  };
+  }));
+  return forward(operation);
 });
 
-// apollo client setup
-const client = new ApolloClient({ // Create the Apollo Client instance so it can be used in the app
-  link: authLink.concat(httpLink), // Combine auth and HTTP links
-  cache: new InMemoryCache(), // Use an in-memory cache for Apollo Client
+const errorLink = onError(({ networkError, graphQLErrors }) => {
+  if (graphQLErrors) {
+    graphQLErrors.forEach(({ message, locations, path }) =>
+      console.log(
+        `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
+      )
+    );
+  }
+  if (networkError) console.log(`[Network error]: ${networkError}`);
+});
+
+export const client = new ApolloClient({
+  link: from([authAndCsrfLink, httpLink]),
+  cache: new InMemoryCache(),
 });
 
 export default client;

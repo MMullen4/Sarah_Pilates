@@ -3,16 +3,21 @@ import User from "../models/User.js";
 import nodemailer from "nodemailer";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
+// const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 
 const generateToken = (user: any) => {
+  const secret =
+    process.env.JWT_SECRET ||
+    process.env.JWT_SECRET_KEY ||
+    "dev-only-supersecret";
+  
   return jwt.sign(
     {
       id: user._id,
       email: user.email,
       role: user.role,
     },
-    JWT_SECRET,
+    secret,
     { expiresIn: "7d" }
   );
 };
