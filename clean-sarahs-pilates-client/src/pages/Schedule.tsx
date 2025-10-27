@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { useMutation, useQuery } from "@apollo/client";
@@ -15,7 +15,7 @@ interface Booking {
   _id: string;
   name: string;
   email: string;
-  date: string; // Unix timestamp string
+  date: string;
   time: string;
 }
 
@@ -40,15 +40,13 @@ const addMinutes = (time24: string, minutes: number) => {
 
 const Schedule: React.FC = () => {
   const [date, setDate] = useState<Date>(new Date());
-  const [formData, setFormData] = useState({ name: "", email: "", time: "" });
+  const [time, setTime] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [confirmation, setConfirmation] = useState<{
     date: Date;
     time: string;
   } | null>(null);
-
-  const formRef = useRef<HTMLFormElement>(null);
 
   const { data, loading: bookingsLoading, refetch } = useQuery(GET_BOOKINGS);
   const bookings: Booking[] = data?.getBookings || [];
@@ -57,44 +55,42 @@ const Schedule: React.FC = () => {
   const [updateBooking] = useMutation(UPDATE_BOOKING);
   const [deleteBooking] = useMutation(DELETE_BOOKING);
 
-  // decode JWT to identify current user
-  const currentUserEmail = React.useMemo(() => {
+  // Get current user info from JWT
+  const currentUser = React.useMemo(() => {
     const token = localStorage.getItem("token");
     if (!token) return null;
     try {
       const payload = JSON.parse(atob(token.split(".")[1] || ""));
-      return payload?.email ?? null;
+      return {
+        id: payload?.id,
+        email: payload?.email,
+        role: payload?.role,
+        username: payload?.username,
+      };
     } catch {
       return null;
     }
   }, []);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const isAdmin = currentUser?.role === "admin";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentUser) {
+      toast.error("Please log in to book appointments");
+      return;
+    }
+
     const isoDate = date.getTime().toString();
 
     try {
       if (selectedBooking) {
-        // 🔹 Ownership check for edit
-        if (selectedBooking.email !== currentUserEmail) {
-          toast.error("You can only edit your own appointments");
-          return;
-        }
-
         await updateBooking({
           variables: {
             id: selectedBooking._id,
             input: {
-              name: formData.name,
-              email: formData.email,
               date: isoDate,
-              time: formData.time,
+              time: time,
             },
           },
         });
@@ -104,19 +100,17 @@ const Schedule: React.FC = () => {
         await bookAppointment({
           variables: {
             input: {
-              name: formData.name,
-              email: formData.email,
               date: isoDate,
-              time: formData.time,
+              time: time,
             },
           },
         });
         toast.success("Appointment booked");
       }
 
-      setConfirmation({ date, time: formData.time });
+      setConfirmation({ date, time });
       setSubmitted(true);
-      setFormData({ name: "", email: "", time: "" });
+      setTime("");
       await refetch();
     } catch (err) {
       console.error("Booking error:", err);
@@ -125,11 +119,6 @@ const Schedule: React.FC = () => {
   };
 
   const handleDelete = async (booking: Booking) => {
-    if (booking.email !== currentUserEmail) {
-      toast.error("You can only remove your own appointments");
-      return;
-    }
-
     try {
       await deleteBooking({ variables: { id: booking._id } });
       await refetch();
@@ -141,17 +130,8 @@ const Schedule: React.FC = () => {
   };
 
   const handleEdit = (booking: Booking) => {
-    if (booking.email !== currentUserEmail) {
-      toast.error("You can only edit your own appointments");
-      return;
-    }
-
     setSelectedBooking(booking);
-    setFormData({
-      name: booking.name,
-      email: booking.email,
-      time: booking.time,
-    });
+    setTime(booking.time);
     setDate(new Date(parseInt(booking.date)));
   };
 
@@ -163,12 +143,10 @@ const Schedule: React.FC = () => {
     return d.setHours(0, 0, 0, 0) < today.setHours(0, 0, 0, 0);
   };
 
-  // all booked times for the selected date
   const bookedTimes = bookings
     .filter((b) => isSameDay(new Date(parseInt(b.date)), date))
     .map((b) => b.time);
 
-  // 🔹 sorted upcoming bookings (date/time)
   const upcomingSorted = React.useMemo(() => {
     const toMinutes = (t: string) => {
       const [h, m] = t.split(":").map(Number);
@@ -210,7 +188,7 @@ const Schedule: React.FC = () => {
       />
 
       <p className="text-gray-700 text-center mb-4">
-        Choose a date and submit the form below.
+        Choose a date and time below.
       </p>
 
       <div className="flex justify-center mb-6">
@@ -221,35 +199,12 @@ const Schedule: React.FC = () => {
         />
       </div>
 
-      <form
-        ref={formRef}
-        onSubmit={handleSubmit}
-        className="space-y-4 max-w-md mx-auto"
-      >
-        <input
-          name="name"
-          placeholder="Your Name"
-          required
-          value={formData.name}
-          onChange={handleChange}
-          onFocus={() => setSubmitted(false)}
-          className="w-full border p-2 rounded"
-        />
-        <input
-          name="email"
-          type="email"
-          placeholder="Your Email"
-          required
-          value={formData.email}
-          onChange={handleChange}
-          className="w-full border p-2 rounded"
-        />
-
+      <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto">
         <select
           name="time"
           required
-          value={formData.time}
-          onChange={handleChange}
+          value={time}
+          onChange={(e) => setTime(e.target.value)}
           className="w-full border p-2 rounded"
         >
           <option value="">Select Time</option>
@@ -305,18 +260,22 @@ const Schedule: React.FC = () => {
               </p>
             </div>
             <div className="space-x-2">
-              <button
-                onClick={() => handleEdit(booking)}
-                className="bg-yellow-400 px-3 py-1 rounded"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(booking)}
-                className="bg-red-500 text-white px-3 py-1 rounded"
-              >
-                Delete
-              </button>
+              {(isAdmin || booking.email === currentUser?.email) && (
+                <>
+                  <button
+                    onClick={() => handleEdit(booking)}
+                    className="bg-yellow-400 px-3 py-1 rounded"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(booking)}
+                    className="bg-red-500 text-white px-3 py-1 rounded"
+                  >
+                    Delete
+                  </button>
+                </>
+              )}
             </div>
           </div>
         ))}
