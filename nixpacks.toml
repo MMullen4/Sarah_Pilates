@@ -1,9 +1,17 @@
-# nixpacks.toml
+[variables]
+NIXPACKS_NO_DEFAULT_CACHE_DIRECTORIES = "1"
+
 [phases.setup]
 nixpkgs = ["nodejs_20"]
 
+[phases.install]
+cmds = ["npm ci"]
+
 [phases.build]
-cmds = ["npm run build"]
+cmds = [
+  "cd clean-sarahs-pilates-client && npm run build",
+  "cd server && npm run build"
+]
 
 [start]
-cmd = "npm start"
+cmd = "node server/dist/index.js"
