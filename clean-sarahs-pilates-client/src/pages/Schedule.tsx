@@ -187,7 +187,7 @@ const Schedule: React.FC = () => {
       <img
         src="https://as2.ftcdn.net/v2/jpg/05/85/94/75/1000_F_585947577_bzC0PesLqbJRpmCCnqnTngwX78o0ZStt.jpg"
         alt="Pilates class"
-        className="rounded-lg mb-6 w-full object-cover h-64"
+        className="rounded-lg mb-6 w-2/3 mx-auto object-cover h-64"
       />
 
       <p className="text-gray-700 text-center mb-4">
