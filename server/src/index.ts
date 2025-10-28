@@ -53,10 +53,16 @@ const getUserFromToken = (token?: string): UserClaims | null => {
 };
 
 // ---- static client path ----
-const clientDist = path.resolve(
-  __dirname,
-  "../../clean-sarahs-pilates-client/dist"
-);
+// const clientDist = path.resolve(
+//   __dirname,
+//   "../../clean-sarahs-pilates-client/dist"
+// );
+
+const clientDist = path.join(process.cwd(), "clean-sarahs-pilates-client/dist");
+
+console.log("__dirname:", __dirname);
+console.log("clientDist path:", clientDist);
+console.log("Client dist exists:", fs.existsSync(clientDist));
 
 const startServer = async () => {
   try {
