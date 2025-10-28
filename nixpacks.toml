@@ -1,4 +1,7 @@
 # nixpacks.toml
+[phases.setup]
+nixpkgs = ["nodejs_20"]
+
 [phases.build]
 cmds = ["npm run build"]
 
