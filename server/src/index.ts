@@ -51,13 +51,17 @@ const getUserFromToken = (token?: string): UserClaims | null => {
   }
 };
 
-// ---- static client path ----
+
 // const clientDist = path.resolve(
 //   __dirname,
 //   "../../clean-sarahs-pilates-client/dist"
 // );
 
-const clientDist = path.join(process.cwd(), "clean-sarahs-pilates-client/dist");
+const clientDist =
+  NODE_ENV === "production"
+    ? path.join(process.cwd(), "clean-sarahs-pilates-client/dist")
+    : path.resolve(__dirname, "../../clean-sarahs-pilates-client/dist");
+
 
 console.log("__dirname:", __dirname);
 console.log("clientDist path:", clientDist);
@@ -74,7 +78,7 @@ const startServer = async () => {
   }
 
   const app = express();
-  // Cross origin 
+  // Cross origin
   app.use(
     cors({
       origin:
@@ -85,7 +89,6 @@ const startServer = async () => {
     })
   );
 
-
   app.use(express.json({ limit: "1mb" }));
 
   // Healthchecks
@@ -94,8 +97,15 @@ const startServer = async () => {
     res.status(200).json({ dbConnected: isDbConnected() })
   );
 
-  // create a new ApolloServer instance 
-  const server = new ApolloServer({ typeDefs, resolvers });
+  // create a new ApolloServer instance
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    formatError: (err) => {
+      console.error("GraphQL error:", err);
+      return err;
+    },
+  });
   await server.start();
   app.use(
     "/graphql",

@@ -15,8 +15,11 @@ const Login: React.FC = () => {
     try {
       const { data } = await login({ variables: { ...formData } });
       const token = data.login.token;
+      const user = data.login.user;
       localStorage.setItem("token", token);
-      alert("✅ Login successful!");
+    localStorage.setItem(
+      "welcomeMessage",`✅ Welcome ${user.username || user.email}!`);
+      window.location.reload(); // refresh page
     } catch (err) {
       console.error("Login error:", err);
     }

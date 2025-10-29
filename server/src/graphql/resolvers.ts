@@ -10,7 +10,7 @@ const generateToken = (user: any) => {
     process.env.JWT_SECRET ||
     process.env.JWT_SECRET_KEY ||
     "dev-only-supersecret";
-  
+
   return jwt.sign(
     {
       id: user._id,
@@ -27,15 +27,37 @@ export const resolvers = {
   Query: {
     // ✅ Sorted & filtered to only return today's and future bookings
     getBookings: async () => {
-      const startOfToday = new Date();
-      startOfToday.setHours(0, 0, 0, 0);
-      const cutoff = startOfToday.getTime().toString(); // since stored as string
+      const now = new Date();
+      const bookings = await Booking.find().sort({ date: 1, time: 1 });
 
-      return await Booking.find({ date: { $gte: cutoff } }).sort({
-        date: 1,
-        time: 1,
+      return bookings.filter((booking: any) => {
+        if (!booking.date || !booking.time) return false;
+
+        const dateStr = String(booking.date);
+        const slotMs = Number.isFinite(+dateStr)
+          ? +dateStr
+          : Date.parse(dateStr);
+        if (!Number.isFinite(slotMs)) return false;
+
+        const slotDate = new Date(slotMs);
+        const [hours, minutes] = booking.time.split(":").map(Number);
+        slotDate.setHours(hours, minutes, 0, 0);
+
+        return slotDate.getTime() >= now.getTime();
       });
     },
+
+    // // ✅ Sorted & filtered to only return today's and future bookings
+    // getBookingsAdmin: async () => {
+    //   const startOfToday = new Date();
+    //   startOfToday.setHours(0, 0, 0, 0);
+    //   const cutoff = startOfToday.getTime().toString(); // since stored as string
+
+    //   return await Booking.find({ date: { $gte: cutoff } }).sort({
+    //     date: 1,
+    //     time: 1,
+    //   });
+    // },
 
     services: async () => {
       return [
@@ -61,7 +83,7 @@ export const resolvers = {
   Mutation: {
     // ✅ Registration
     register: async (_: any, { input }: any) => {
-      const isSarah = input.email === "sarah@example.com";
+      const isSarah = input.email === "sawmullen4@gmail.com";
       const user = await User.create({
         ...input,
         role: isSarah ? "admin" : "user",
@@ -96,7 +118,14 @@ export const resolvers = {
       const nowMs = Date.now();
       const slotMs = Number.isFinite(+dateStr) ? +dateStr : Date.parse(dateStr);
       if (!Number.isFinite(slotMs)) throw new Error("Invalid date");
-      if (slotMs < nowMs) throw new Error("Cannot book a past time");
+
+      // Combine date and time for proper comparison
+      const slotDate = new Date(slotMs);
+      const [hours, minutes] = timeStr.split(":").map(Number);
+      slotDate.setHours(hours, minutes, 0, 0);
+
+      if (slotDate.getTime() < nowMs)
+        throw new Error("Cannot book a past time");
 
       // 🚫 Prevent double-booking
       const exists = await Booking.findOne({
