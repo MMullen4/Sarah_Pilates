@@ -7,9 +7,7 @@ const Navbar: React.FC = () => {
   const [form, setForm] = useState({ username: "", email: "", password: "" });
   const [isRegistering, setIsRegistering] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [token, setToken] = useState<string | null>(
-    localStorage.getItem("token")
-  );
+  const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
 
   const [loginUser] = useMutation(LOGIN_USER);
   const [registerUser] = useMutation(REGISTER_USER);
@@ -189,7 +187,7 @@ const Navbar: React.FC = () => {
           </div>
 
           {/* Mobile/Tablet Menu */}
-          {(isMobileMenuOpen || window.innerWidth < 1024) && (
+          {isMobileMenuOpen && (
             <div className="lg:hidden mt-4 space-y-4">
               <ul className="grid grid-cols-2 gap-2 text-center">
                 <li>
