@@ -82,24 +82,61 @@ export const resolvers = {
 
     // ✅ Create a booking
     bookAppointment: async (_: any, { input }: any, context: any) => {
-      if (!context.user) throw new Error("Unauthorized - Please sign up or log in");
+      if (!context.user)
+        throw new Error("Unauthorized - Please sign up or log in");
 
-      const user = await User.findById(context.user.id);
-      if (!user) throw new Error("User not found");
+      const u = await User.findById(context.user.id).lean();
+      if (!u) throw new Error("User not found");
 
+      // ⛳ Normalize inputs (you store date as a string timestamp)
+      const dateStr = String(input.date).trim(); // e.g., "1761807600000"
+      const timeStr = String(input.time).trim(); // e.g., "08:00"
+
+      // 🔐 Optional: block past times
+      const nowMs = Date.now();
+      const slotMs = Number.isFinite(+dateStr) ? +dateStr : Date.parse(dateStr);
+      if (!Number.isFinite(slotMs)) throw new Error("Invalid date");
+      if (slotMs < nowMs) throw new Error("Cannot book a past time");
+
+      // 🚫 Prevent double-booking
       const exists = await Booking.findOne({
-        date: input.date,
-        time: input.time,
-      });
+        date: dateStr,
+        time: timeStr,
+      }).lean();
       if (exists) throw new Error("That time slot is already booked");
 
-      return await Booking.create({
-        ...input,
-        name: user.username,
-        email: user.email,
+      // ✅ Always use server-side identity (ignore client-sent name/email)
+      const booking = await Booking.create({
+        date: dateStr,
+        time: timeStr,
+        name: u.username ?? "User",
+        email: u.email ?? "",
         user: context.user.id,
+        createdAt: new Date().toISOString(),
       });
+
+      return booking;
     },
+
+    // bookAppointment: async (_: any, { input }: any, context: any) => {
+    //   if (!context.user) throw new Error("Unauthorized - Please sign up or log in");
+
+    //   const user = await User.findById(context.user.id);
+    //   if (!user) throw new Error("User not found");
+
+    //   const exists = await Booking.findOne({
+    //     date: input.date,
+    //     time: input.time,
+    //   });
+    //   if (exists) throw new Error("That time slot is already booked");
+
+    //   return await Booking.create({
+    //     ...input,
+    //     name: input.name ?? user.username, // use user name already entered
+    //     email: input.email ?? user.email, // use user email already entered
+    //     user: context.user.id,
+    //   });
+    // },
 
     // ✅ Update booking (with ownership check)
     updateBooking: async (_: any, { id, input }: any, context: any) => {

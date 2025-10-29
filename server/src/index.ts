@@ -74,6 +74,17 @@ const startServer = async () => {
   }
 
   const app = express();
+  // Cross origin 
+  app.use(
+    cors({
+      origin:
+        NODE_ENV === "production"
+          ? process.env.CLIENT_URL || true
+          : "http://localhost:5173",
+      credentials: true,
+    })
+  );
+
 
   app.use(express.json({ limit: "1mb" }));
 
