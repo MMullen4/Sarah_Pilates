@@ -75,28 +75,6 @@ const startServer = async () => {
 
   const app = express();
 
-  // CORS: allow localhost and production origins
-  app.use(
-    cors({
-      origin: (origin, cb) => {
-        if (!origin) return cb(null, true); // same-origin requests
-        if (/^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin)) {
-          return cb(null, true); // any localhost port
-        }
-        // Allow production domains
-        if (
-          origin &&
-          (origin.includes("railway.app") ||
-            origin.includes("sarah-pilates-mb.com"))
-        ) {
-          return cb(null, true); // production domains
-        }
-        cb(new Error(`CORS blocked: ${origin}`));
-      },
-      credentials: true,
-    })
-  );
-
   app.use(express.json({ limit: "1mb" }));
 
   // Healthchecks
@@ -105,7 +83,7 @@ const startServer = async () => {
     res.status(200).json({ dbConnected: isDbConnected() })
   );
 
-  // Apollo
+  // create a new ApolloServer instance 
   const server = new ApolloServer({ typeDefs, resolvers });
   await server.start();
   app.use(
