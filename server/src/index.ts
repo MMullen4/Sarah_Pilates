@@ -23,7 +23,6 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 // Then load root .env (won't override existing values)
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
-
 const PORT = Number(process.env.PORT) || 3001;
 const NODE_ENV = process.env.NODE_ENV || "development";
 
@@ -35,7 +34,7 @@ const getUserFromToken = (token?: string): UserClaims | null => {
     process.env.JWT_SECRET ||
     process.env.JWT_SECRET_KEY ||
     "dev-only-supersecret";
-  
+
   console.log("Using JWT secret:", secret);
 
   if (!secret) {
@@ -76,17 +75,27 @@ const startServer = async () => {
 
   const app = express();
 
-  // CORS: allow localhost origins
-  app.use(cors({
-    origin: (origin, cb) => {
-      if (!origin) return cb(null, true); // same-origin requests
-      if (/^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin)) {
-        return cb(null, true); // any localhost port
-      }
-      cb(new Error(`CORS blocked: ${origin}`));
-    },
-    credentials: true,
-  }));
+  // CORS: allow localhost and production origins
+  app.use(
+    cors({
+      origin: (origin, cb) => {
+        if (!origin) return cb(null, true); // same-origin requests
+        if (/^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin)) {
+          return cb(null, true); // any localhost port
+        }
+        // Allow production domains
+        if (
+          origin &&
+          (origin.includes("railway.app") ||
+            origin.includes("sarah-pilates-mb.com"))
+        ) {
+          return cb(null, true); // production domains
+        }
+        cb(new Error(`CORS blocked: ${origin}`));
+      },
+      credentials: true,
+    })
+  );
 
   app.use(express.json({ limit: "1mb" }));
 
