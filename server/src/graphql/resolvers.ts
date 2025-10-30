@@ -110,31 +110,42 @@ export const resolvers = {
       const u = await User.findById(context.user.id).lean();
       if (!u) throw new Error("User not found");
 
-      // ⛳ Normalize inputs (you store date as a string timestamp)
-      const dateStr = String(input.date).trim(); // e.g., "1761807600000"
-      const timeStr = String(input.time).trim(); // e.g., "08:00"
+      const dateStr = String(input.date).trim(); // e.g. "1761807600000" (local start-of-day ms)
+      const timeStr = String(input.time).trim(); // e.g. "08:00"
 
-      // 🔐 Optional: block past times
-      const nowMs = Date.now();
-      const slotMs = Number.isFinite(+dateStr) ? +dateStr : Date.parse(dateStr);
-      if (!Number.isFinite(slotMs)) throw new Error("Invalid date");
+      // Validate date
+      const baseMs = Number(dateStr);
+      if (!Number.isFinite(baseMs)) throw new Error("Invalid date");
 
-      // Combine date and time for proper comparison
-      const slotDate = new Date(slotMs);
-      const [hours, minutes] = timeStr.split(":").map(Number);
-      slotDate.setHours(hours, minutes, 0, 0);
+      // Validate & compute time
+      const [hhStr, mmStr] = timeStr.split(":");
+      const hh = Number(hhStr),
+        mm = Number(mmStr);
+      if (
+        !Number.isInteger(hh) ||
+        !Number.isInteger(mm) ||
+        hh < 0 ||
+        hh > 23 ||
+        mm < 0 ||
+        mm > 59
+      ) {
+        throw new Error("Invalid time");
+      }
 
-      if (slotDate.getTime() < nowMs)
-        throw new Error("Cannot book a past time");
+      // Build the slot timestamp by adding minutes to local start-of-day (no timezone surprises)
+      const slotMs = baseMs + (hh * 60 + mm) * 60_000;
 
-      // 🚫 Prevent double-booking
+      // Block only if the combined slot is in the past
+      if (slotMs < Date.now()) throw new Error("Cannot book a past time");
+
+      // Prevent double-booking
       const exists = await Booking.findOne({
         date: dateStr,
         time: timeStr,
       }).lean();
       if (exists) throw new Error("That time slot is already booked");
 
-      // ✅ Always use server-side identity (ignore client-sent name/email)
+      // Always derive identity from auth (ignore client-sent name/email)
       const booking = await Booking.create({
         date: dateStr,
         time: timeStr,
@@ -146,26 +157,6 @@ export const resolvers = {
 
       return booking;
     },
-
-    // bookAppointment: async (_: any, { input }: any, context: any) => {
-    //   if (!context.user) throw new Error("Unauthorized - Please sign up or log in");
-
-    //   const user = await User.findById(context.user.id);
-    //   if (!user) throw new Error("User not found");
-
-    //   const exists = await Booking.findOne({
-    //     date: input.date,
-    //     time: input.time,
-    //   });
-    //   if (exists) throw new Error("That time slot is already booked");
-
-    //   return await Booking.create({
-    //     ...input,
-    //     name: input.name ?? user.username, // use user name already entered
-    //     email: input.email ?? user.email, // use user email already entered
-    //     user: context.user.id,
-    //   });
-    // },
 
     // ✅ Update booking (with ownership check)
     updateBooking: async (_: any, { id, input }: any, context: any) => {
