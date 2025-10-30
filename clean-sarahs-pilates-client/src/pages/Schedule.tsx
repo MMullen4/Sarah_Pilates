@@ -180,26 +180,28 @@ const Schedule: React.FC = () => {
 
   return (
     <div className="p-6 max-w-4xl mx-auto bg-white shadow-md rounded-lg mt-10">
-      <h1 className="text-3xl font-bold text-orange-600 mb-4 text-center">
+      <h1 className="text-4xl md:text-4xl lg:text-3xl font-bold text-orange-600 mb-4 text-center">
         Schedule a Session
       </h1>
 
       <img
         src="https://as2.ftcdn.net/v2/jpg/05/85/94/75/1000_F_585947577_bzC0PesLqbJRpmCCnqnTngwX78o0ZStt.jpg"
         alt="Pilates class"
-        className="rounded-lg mb-6 w-2/3 mx-auto object-cover h-64"
+        className="rounded-lg mb-6 sm:mb-8 md:mb-12 lg:mb-6 w-2/3 mx-auto object-cover h-64"
       />
 
       <p className="text-gray-700 text-center mb-4">
         Choose a date and time below.
       </p>
 
-      <div className="flex justify-center mb-6">
-        <Calendar
-          onChange={(value) => setDate(value as Date)}
-          value={date}
-          tileDisabled={({ date }) => isPastDate(date)}
-        />
+      <div className="flex justify-center mb-6 md:mb-12 lg:mb-6">
+        <div className="scale-110 sm:scale-125 md:scale-125 lg:scale-125 my-3 sm:my-7 md:my-8 lg:my-8">
+          <Calendar
+            onChange={(value) => setDate(value as Date)}
+            value={date}
+            tileDisabled={({ date }) => isPastDate(date)}
+          />
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto">

@@ -72,13 +72,13 @@ const Navbar: React.FC = () => {
           <div className="flex justify-between items-center">
             <Link
               to="/"
-              className="text-xl md:text-2xl font-bold text-orange-600"
+              className="text-4xl md:text-4xl lg:text-2xl font-bold text-orange-600"
             >
               Pilates With Sarah
             </Link>
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden text-gray-700 text-2xl"
+              className="lg:hidden text-gray-700 text-3xl md:text-4xl"
             >
               ☰
             </button>
@@ -189,9 +189,9 @@ const Navbar: React.FC = () => {
           {/* Mobile/Tablet Menu */}
           {isMobileMenuOpen && (
             <div className="lg:hidden mt-4 space-y-4">
-              <ul className="grid grid-cols-2 gap-2 text-center">
+              <ul className="grid grid-cols-2 gap-2 text-center text-lg md:text-xl">
                 <li>
-                  <Link to="/" className="block py-2 hover:text-orange-600">
+                  <Link to="/" className="block py-3 hover:text-orange-600">
                     Home
                   </Link>
                 </li>
