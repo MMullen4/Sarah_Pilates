@@ -2,10 +2,13 @@
 NIXPACKS_NO_DEFAULT_CACHE_DIRECTORIES = "1"
 
 [phases.setup]
-nixpkgs = ["nodejs_20"]
+nixpkgs = ["nodejs_22"]
 
 [phases.install]
-cmds = ["npm ci"]
+cmds = [
+  "rm -rf node_modules server/node_modules clean-sarahs-pilates-client/node_modules",
+  "npm ci --include=dev"
+]
 
 [phases.build]
 cmds = [
