@@ -3,34 +3,16 @@ import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import { Toaster } from "react-hot-toast";
 
+import Home from "./pages/Home";
 import About from "./pages/About";
 import Studio from "./pages/Studio";
 import Schedule from "./pages/Schedule";
 import Services from "./pages/Services";
 import Contact from "./pages/Contact";
 
-const Home: React.FC = () => {
-  return (
-    <div className="p-10 max-w-3xl mx-auto text-center">
-      <img
-        src="https://as2.ftcdn.net/v2/jpg/05/85/94/75/1000_F_585947577_bzC0PesLqbJRpmCCnqnTngwX78o0ZStt.jpg"
-        alt="Pilates class"
-        className="rounded-lg mb-6 w-full object-cover h-64"
-      />
-      <h1 className="text-4xl font-bold text-orange-600 mb-4">
-        Welcome to Pilates With Sarah!
-      </h1>
-      <p className="text-lg text-gray-700">
-        Empower your mind and heal your body through the strength of Pilates. Join
-        us to improve posture, flexibility, and overall well-being.
-      </p>
-    </div>
-  );
-};
-
 const App: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="site-shell min-h-screen">
       <Navbar />
 
       {/* Toaster must NOT be inside <Routes> */}

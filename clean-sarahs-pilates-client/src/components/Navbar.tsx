@@ -1,6 +1,6 @@
 // src/components/Navbar.tsx
 import React, { useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { useMutation } from "@apollo/client";
 import { LOGIN_USER, REGISTER_USER } from "../graphql/mutations";
 
@@ -91,32 +91,51 @@ const Navbar: React.FC = () => {
     window.location.reload();
   };
 
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsMenuOpen(false);
+        menuRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [isMenuOpen]);
+
   const closeMenu = () => setIsMenuOpen(false);
 
   return (
-    <nav className="bg-white shadow-md px-4 py-4 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
+    <nav className="site-nav" aria-label="Main navigation">
+      <div className="site-nav-inner">
         <Link
           to="/"
-          className="text-2xl md:text-3xl lg:text-2xl font-bold text-orange-600"
+          className="site-brand"
           onClick={closeMenu}
         >
-          Pilates With Sarah
+          Pilates with Sarah
         </Link>
 
-        <div className="relative">
+        <div className="site-navigation">
+          <div className="desktop-links">
+            <NavLink to="/services">Services</NavLink>
+            <NavLink to="/about">About</NavLink>
+            <NavLink to="/contact">Contact</NavLink>
+          </div>
+          <Link to="/schedule" className="book-button">Book now</Link>
+        <div className="relative" ref={menuRef}>
           <button
             onClick={() => setIsMenuOpen((v) => !v)}
             aria-expanded={isMenuOpen}
             aria-label="Toggle navigation menu"
-            className="text-gray-700 text-4xl md:text-5xl lg:text-3xl focus:outline-none"
+            className="account-menu-button" aria-controls="account-navigation"
           >
-            ☰
+            {isMenuOpen ? "Close" : token ? "Account / Menu" : "Sign in / Menu"}
           </button>
 
           {isMenuOpen && (
             <div
-              ref={menuRef}
+              id="account-navigation"
               className="absolute right-0 mt-2 w-80 md:w-96 bg-white rounded-lg shadow-lg border z-50"
             >
               <div className="p-4 space-y-3">
@@ -237,6 +256,7 @@ const Navbar: React.FC = () => {
               </div>
             </div>
           )}
+        </div>
         </div>
       </div>
     </nav>
