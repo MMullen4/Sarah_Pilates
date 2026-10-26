@@ -24,12 +24,14 @@ const Contact: React.FC = () => {
   };
 
   return (
-    <div className="p-10 max-w-xl mx-auto">
-      <h1 className="text-3xl font-bold text-orange-600 mb-6">Contact Us</h1>
+    <main className="contact-page" id="main-content">
+      <h1>Get in touch</h1>
+      <p className="contact-intro">Have a question about sessions or getting started? Send Sarah a message.</p>
       <form ref={formRef} onSubmit={sendEmail} className="space-y-4">
         <input
           type="text"
           name="user_name"
+          aria-label="Your name"
           placeholder="Your Name"
           required
           className="w-full px-4 py-2 border rounded"
@@ -37,6 +39,7 @@ const Contact: React.FC = () => {
         <input
           type="email"
           name="user_email"
+          aria-label="Your email"
           placeholder="Your Email"
           required
           className="w-full px-4 py-2 border rounded"
@@ -44,26 +47,27 @@ const Contact: React.FC = () => {
         <textarea
           name="message"
           rows={5}
+          aria-label="Your message"
           placeholder="Your Message"
           required
           className="w-full px-4 py-2 border rounded"
         />
         <button
           type="submit"
-          className="bg-orange-600 text-white px-6 py-2 rounded hover:bg-orange-700 transition"
+          className="book-button"
         >
           Send Message
         </button>
         {status === "success" && (
-          <p className="text-green-600 mt-2">Message sent successfully!</p>
+          <p role="status" className="text-green-600 mt-2">Message sent successfully!</p>
         )}
         {status === "error" && (
-          <p className="text-red-600 mt-2">
+          <p role="alert" className="text-red-600 mt-2">
             Something went wrong. Please try again.
           </p>
         )}
       </form>
-    </div>
+    </main>
   );
 };
 
