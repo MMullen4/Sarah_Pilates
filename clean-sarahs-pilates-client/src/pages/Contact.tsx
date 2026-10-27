@@ -19,7 +19,10 @@ const Contact: React.FC = () => {
       )
       .then(
         () => setStatus("success"),
-        () => setStatus("error")
+        (error) => {
+          console.error("EmailJS error:", error);
+          setStatus("error");
+        }
       );
   };
 
