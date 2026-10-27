@@ -195,7 +195,7 @@ const Schedule: React.FC = () => {
       </p>
 
       <div className="flex justify-center mb-6 md:mb-12 lg:mb-6">
-        <div className="scale-110 sm:scale-125 md:scale-125 lg:scale-125 my-3 sm:my-7 md:my-8 lg:my-8">
+        <div className="my-3 sm:my-7 md:my-8 lg:my-8">
           <Calendar
             onChange={(value) => setDate(value as Date)}
             value={date}
@@ -204,7 +204,7 @@ const Schedule: React.FC = () => {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto">
+      <form onSubmit={handleSubmit} className="schedule-form space-y-4 max-w-md mx-auto">
         <select
           name="time"
           required
