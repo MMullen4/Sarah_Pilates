@@ -149,20 +149,6 @@ const Navbar: React.FC = () => {
                     Home
                   </Link>
                   <Link
-                    to="/about"
-                    onClick={closeMenu}
-                    className="block text-lg md:text-xl py-2 px-3 hover:bg-orange-50 hover:text-orange-600 rounded transition"
-                  >
-                    About
-                  </Link>
-                  <Link
-                    to="/schedule"
-                    onClick={closeMenu}
-                    className="block text-lg md:text-xl py-2 px-3 hover:bg-orange-50 hover:text-orange-600 rounded transition"
-                  >
-                    Schedule
-                  </Link>
-                  <Link
                     to="/services"
                     onClick={closeMenu}
                     className="block text-lg md:text-xl py-2 px-3 hover:bg-orange-50 hover:text-orange-600 rounded transition"
@@ -170,11 +156,25 @@ const Navbar: React.FC = () => {
                     Services
                   </Link>
                   <Link
+                    to="/about"
+                    onClick={closeMenu}
+                    className="block text-lg md:text-xl py-2 px-3 hover:bg-orange-50 hover:text-orange-600 rounded transition"
+                  >
+                    About
+                  </Link>
+                  <Link
                     to="/contact"
                     onClick={closeMenu}
                     className="block text-lg md:text-xl py-2 px-3 hover:bg-orange-50 hover:text-orange-600 rounded transition"
                   >
                     Contact
+                  </Link>
+                  <Link
+                    to="/schedule"
+                    onClick={closeMenu}
+                    className="block text-lg md:text-xl py-2 px-3 hover:bg-orange-50 hover:text-orange-600 rounded transition"
+                  >
+                    Schedule
                   </Link>
                 </div>
 
