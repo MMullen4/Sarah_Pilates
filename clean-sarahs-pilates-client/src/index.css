@@ -22,11 +22,11 @@ body { margin: 0; }
 .services-intro-copy p + p { margin-top:12px; }
 .services-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; max-width:1200px; margin-left:auto; margin-right:auto; }
 .service-image-link { display:block; overflow:hidden; }
-.service-image { aspect-ratio:488 / 557; background-size:cover; background-position:center; background-repeat:no-repeat; transition:transform .3s; }
+.service-image { aspect-ratio:488 / 557; background-size:contain; background-position:center; background-repeat:no-repeat; }
 .service-image-apparatus { background-image:url('/images/design-ref-1.png'); }
 .service-image-reformer { background-image:url('/images/design-ref-2.png'); }
 .service-image-mat { background-image:url('/images/design-ref-3.png'); }
-.service-image-link:hover .service-image { transform:scale(1.025); }
+.service-image-link:hover .service-image { transform:none; }
 .service-card h2 { font-family:Georgia, 'Times New Roman', serif; font-size:clamp(26px,2.4vw,41px); line-height:1.08; font-weight:400; margin:44px 12px 24px 0; min-height:2.2em; letter-spacing:-.025em; }
 .service-card > p { font-size:14px; line-height:1.6; max-width:370px; padding-right:20px; }
 .service-book-link { display:inline-flex; gap:24px; font-size:13px; margin-top:28px; padding-bottom:6px; border-bottom:1px solid; }
