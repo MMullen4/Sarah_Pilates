@@ -5,8 +5,8 @@ import ContactSection from "../components/ContactSection";
 export default function Home() {
   return (
     <main className="home-page" id="main-content">
-      <section className="home-hero" aria-labelledby="home-heading">
-        <h1 id="home-heading"></h1> 
+      <section className="home-hero" aria-label="Pilates with Sarah">
+        <img className="home-hero-image" src="/images/home-hero.png" alt="Pilates with Sarah" fetchPriority="high" />
       </section>
       <ContactSection />
       <footer className="site-footer">
