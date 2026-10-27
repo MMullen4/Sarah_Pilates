@@ -32,7 +32,7 @@ const Services: React.FC = () => (
     <ContactSection />
     <footer className="site-footer">
       <Link to="/">Pilates with Sarah</Link>
-      <div><Link to="/studio">The studio</Link><Link to="/contact">Get in touch</Link></div>
+      <div><Link to="/contact">Get in touch</Link></div>
     </footer>
   </main>
 );

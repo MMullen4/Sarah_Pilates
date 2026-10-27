@@ -156,13 +156,6 @@ const Navbar: React.FC = () => {
                     About
                   </Link>
                   <Link
-                    to="/studio"
-                    onClick={closeMenu}
-                    className="block text-lg md:text-xl py-2 px-3 hover:bg-orange-50 hover:text-orange-600 rounded transition"
-                  >
-                    Studio
-                  </Link>
-                  <Link
                     to="/schedule"
                     onClick={closeMenu}
                     className="block text-lg md:text-xl py-2 px-3 hover:bg-orange-50 hover:text-orange-600 rounded transition"
