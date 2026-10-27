@@ -62,6 +62,9 @@ a:focus-visible,button:focus-visible,input:focus-visible { outline:2px solid #11
 .site-nav .hover\:text-orange-600:hover { color:#111; }
 .site-nav .hover\:bg-orange-50:hover { background:#ebebef; }
 .site-nav .text-blue-600 { color:#111; }
+.site-nav .absolute { background:#fff; color:#111; }
+.site-nav .absolute a, .site-nav .absolute button:not([type="submit"]) { color:#111; }
+.site-nav .absolute hr { border-color:#e5e7eb; }
 
 .contact-page { max-width:720px; margin:0 auto; padding:65px 6vw 100px; }
 .contact-page h1 { font-family:Georgia,'Times New Roman',serif; font-size:clamp(44px,5vw,72px); line-height:1.05; font-weight:400; letter-spacing:-.035em; }
@@ -78,7 +81,7 @@ textarea:focus-visible { outline:2px solid #111; outline-offset:5px; }
 
 /* Light text against charcoal for a brighter, readable presentation. */
 :root,body,.site-shell { background:#292d34; color:#fff; }
-.site-brand,.desktop-links,.services-intro h1,.service-card h2,.contact-page h1,.site-footer,.service-book-link { color:#fff; }
+.site-brand,.desktop-links,.desktop-links a,.services-intro h1,.service-card h2,.contact-page h1,.site-footer,.service-book-link,.account-menu-button { color:#fff; }
 .services-intro-copy,.service-card > p,.contact-intro,.contact-page > p { color:#f5f5f7; }
 .site-footer { border-color:#737780; }
 .book-button { background:#fff; color:#222; }
