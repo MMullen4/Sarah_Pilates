@@ -13,8 +13,8 @@ const Services: React.FC = () => (
     <section className="services-intro" aria-labelledby="services-heading">
       <h1 id="services-heading">Guided Movement,<br />Evidenced Expertise</h1>
       <div className="services-intro-copy">
-        <p>Discover a thoughtful approach to Pilates, with movement designed to support alignment, mobility, and total body strength.</p>
-        <p>Personalized guidance meets purposeful practice. Explore private sessions, duet reformer sessions, and mat classes to find your way to move.</p>
+        <p>Explore Pilates sessions in Manhattan Beach, including private apparatus instruction, duet reformer sessions, and guided mat classes. Each format emphasizes mindful movement, alignment, mobility, and strength.</p>
+        <p>Whether you prefer individual attention, practicing with a partner, or building consistency through mat Pilates, discover an approach that fits your goals.</p>
       </div>
     </section>
     <section className="services-grid" aria-label="Pilates services">
@@ -28,6 +28,14 @@ const Services: React.FC = () => (
           <Link to="/schedule" className="service-book-link">View schedule <span aria-hidden="true">↗</span></Link>
         </article>
       ))}
+    </section>
+    <section className="services-seo-details" aria-labelledby="services-local-heading">
+      <h2 id="services-local-heading">Find Your Pilates Practice in Manhattan Beach</h2>
+      <p>Choose from one-on-one private apparatus Pilates, duet reformer sessions for two, or a guided mat class series. Explore the options above, then check available session times or contact Sarah with questions about getting started.</p>
+      <div className="services-seo-actions">
+        <Link to="/schedule" className="service-book-link">View Pilates schedule</Link>
+        <Link to="/contact" className="service-book-link">Ask about sessions</Link>
+      </div>
     </section>
     <ContactSection />
     <footer className="site-footer">
