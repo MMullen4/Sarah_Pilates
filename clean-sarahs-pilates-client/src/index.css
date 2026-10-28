@@ -154,3 +154,11 @@ textarea:focus-visible { outline:2px solid #111; outline-offset:5px; }
 .home-seo-links { display:flex; gap:36px; justify-content:center; flex-wrap:wrap; margin-top:30px; }
 .home-seo-links .service-book-link { margin-top:0; }
 @media(max-width:650px) { .home-seo-intro { padding:45px 0 0; } .home-seo-copy > p:not(.home-seo-eyebrow) { font-size:16px; } .home-seo-links { gap:18px 30px; } }
+
+/* Services local SEO section — matches existing charcoal and serif styling. */
+.services-seo-details { max-width:900px; margin:90px auto 0; padding:55px 0 0; border-top:1px solid #737780; text-align:center; }
+.services-seo-details h2 { font-family:Georgia,'Times New Roman',serif; font-weight:400; font-size:clamp(34px,4vw,58px); line-height:1.12; letter-spacing:-.03em; color:#fff; margin:0 0 22px; }
+.services-seo-details p { font-size:17px; line-height:1.8; color:#f5f5f7; max-width:760px; margin:0 auto; }
+.services-seo-actions { display:flex; gap:36px; flex-wrap:wrap; justify-content:center; margin-top:28px; }
+.services-seo-actions .service-book-link { margin-top:0; }
+@media(max-width:650px) { .services-seo-details { margin-top:60px; padding-top:38px; } .services-seo-details p { font-size:16px; } .services-seo-actions { gap:20px 30px; } }
