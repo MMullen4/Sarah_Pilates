@@ -1,6 +1,7 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
+import RouteSEO from "./components/RouteSEO";
 import { Toaster } from "react-hot-toast";
 
 import Home from "./pages/Home";
@@ -12,6 +13,7 @@ import Contact from "./pages/Contact";
 const App: React.FC = () => {
   return (
     <div className="site-shell min-h-screen">
+      <RouteSEO />
       <Navbar />
 
       {/* Toaster must NOT be inside <Routes> */}
