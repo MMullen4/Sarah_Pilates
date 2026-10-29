@@ -7,7 +7,7 @@ const typeDefs = gql`
     email: String!
     date: String!
     time: String!
-    user: ID! 
+    user: ID 
     createdAt: String
   }
 
