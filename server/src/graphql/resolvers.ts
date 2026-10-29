@@ -190,7 +190,7 @@ export const resolvers = {
 
       const dateStr = String(input?.date ?? "").trim();
       const timeStr = String(input?.time ?? "").trim();
-      if (!Number.isFinite(Number(dateStr)) || !/^([01]\\d|2[0-3]):[0-5]\\d$/.test(timeStr)) {
+      if (!Number.isFinite(Number(dateStr)) || !/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(timeStr)) {
         throw new Error("Invalid appointment date or time");
       }
       const conflict = await Booking.findOne({
