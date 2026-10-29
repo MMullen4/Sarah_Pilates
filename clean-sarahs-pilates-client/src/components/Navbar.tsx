@@ -227,7 +227,7 @@ const Navbar: React.FC = () => {
                     <button
                       type="submit"
                       disabled={loggingIn || registering}
-                      className="w-full bg-orange-600 text-white py-3 px-4 rounded hover:bg-orange-700 text-lg disabled:opacity-60"
+                      className="account-auth-submit"
                     >
                       {isRegistering
                         ? registering
@@ -240,7 +240,7 @@ const Navbar: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setIsRegistering((v) => !v)}
-                      className="w-full text-blue-600 hover:text-blue-800 underline text-base"
+                      className="account-auth-switch"
                     >
                       {isRegistering ? "Switch to Login" : "Switch to Sign Up"}
                     </button>
