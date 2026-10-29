@@ -83,10 +83,12 @@ export const resolvers = {
   Mutation: {
     // ✅ Registration
     register: async (_: any, { input }: any) => {
-      const isSarah = input.email === "sawmullen4@gmail.com";
+      // Public signups must never grant administrator privileges.
       const user = await User.create({
-        ...input,
-        role: isSarah ? "admin" : "user",
+        username: input.username,
+        email: input.email,
+        password: input.password,
+        role: "user",
       });
       const token = generateToken(user);
       return { token, user };
