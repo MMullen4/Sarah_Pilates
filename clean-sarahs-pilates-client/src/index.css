@@ -209,3 +209,8 @@ textarea:focus-visible { outline:2px solid #111; outline-offset:5px; }
 .booking-action { background:#fff; color:#222; border:1px solid #ddd; border-radius:6px; padding:7px 12px; margin:4px; }
 .booking-action:hover { background:#e5e7eb; }
 @media(max-width:650px) { .booking-page { margin:15px auto 50px; padding:25px 6vw; } }
+
+/* Center the booking calendar across desktop and mobile widths. */
+.booking-calendar-wrap { display:flex; width:100%; justify-content:center; align-items:center; margin:24px auto 36px; }
+.booking-calendar-inner { display:flex; justify-content:center; width:100%; max-width:460px; }
+.booking-calendar-inner .react-calendar { margin-left:auto; margin-right:auto; box-sizing:border-box; }
