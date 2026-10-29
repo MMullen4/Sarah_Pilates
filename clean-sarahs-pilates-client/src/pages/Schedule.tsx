@@ -151,6 +151,7 @@ const Schedule: React.FC = () => {
   };
 
   const handleEdit = (booking: Booking) => {
+    setSubmitted(false);
     setSelectedBooking(booking);
     setTime(booking.time);
     setDate(new Date(parseInt(booking.date)));
@@ -234,7 +235,8 @@ const Schedule: React.FC = () => {
             {availableHours.map((slot) => {
               const booked = bookedTimes.includes(slot);
               const past = isPastSlot(slot);
-              const unavailable = (booked && selectedBooking?.time !== slot) || past;
+              const editingOriginalSlot = selectedBooking?.time === slot && isSameDay(new Date(Number(selectedBooking.date)), date);
+              const unavailable = (booked && !editingOriginalSlot) || past;
               return (
                 <button type="button" key={slot}
                   className={`booking-time-slot ${unavailable ? "is-unavailable" : ""} ${time === slot ? "is-selected" : ""}`}
@@ -242,7 +244,7 @@ const Schedule: React.FC = () => {
                   aria-pressed={time === slot}
                   onClick={() => { setTime(slot); setShowSignInPrompt(false); }}>
                   <span>{formatTime12Hour(slot)}</span>
-                  <span className="booking-time-status">{booked && selectedBooking?.time !== slot ? "Booked" : past ? "Past" : time === slot ? "Selected" : "Available"}</span>
+                  <span className="booking-time-status">{booked && !editingOriginalSlot ? "Booked" : past ? "Past" : time === slot ? "Selected" : "Available"}</span>
                 </button>
               );
             })}
