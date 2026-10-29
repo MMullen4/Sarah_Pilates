@@ -26,11 +26,11 @@ const generateToken = (user: any) => {
 export const resolvers = {
   Query: {
     // ✅ Sorted & filtered to only return today's and future bookings
-    getBookings: async () => {
+    getBookings: async (_: any, __: any, context: any) => {
       const now = new Date();
       const bookings = await Booking.find().sort({ date: 1, time: 1 });
 
-      return bookings.filter((booking: any) => {
+      const upcoming = bookings.filter((booking: any) => {
         if (!booking.date || !booking.time) return false;
 
         const dateStr = String(booking.date);
@@ -45,6 +45,22 @@ export const resolvers = {
 
         return slotDate.getTime() >= now.getTime();
       });
+      // Return availability to everyone, but customer details only to the
+      // booking owner or a database-verified administrator.
+      const viewer = context.user?.id ? await User.findById(context.user.id).lean() : null;
+      const isAdmin = viewer?.role === "admin";
+      return upcoming.map((booking: any) => {
+        if (isAdmin || (viewer && String(booking.user) === String(viewer._id))) return booking;
+        return {
+          _id: booking._id,
+          date: booking.date,
+          time: booking.time,
+          name: "Booked",
+          email: "",
+          user: booking.user,
+        };
+      });
+
     },
 
     // // ✅ Sorted & filtered to only return today's and future bookings
