@@ -43,6 +43,7 @@ const Schedule: React.FC = () => {
   const [time, setTime] = useState("");
   const [showSignInPrompt, setShowSignInPrompt] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [bookingPending, setBookingPending] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [confirmation, setConfirmation] = useState<{
     date: Date;
@@ -102,7 +103,13 @@ const Schedule: React.FC = () => {
       return;
     }
 
+    if (!time) {
+      toast.error("Please select an available date and time.");
+      return;
+    }
+    if (bookingPending) return;
     const isoDate = date.getTime().toString();
+    setBookingPending(true);
 
     try {
       if (selectedBooking) {
@@ -138,6 +145,8 @@ const Schedule: React.FC = () => {
       const msg = err?.message || "Something went wrong while booking";
       toast.error(msg);
       console.error("Booking error:", err);
+    } finally {
+      setBookingPending(false);
     }
   };
 
@@ -233,7 +242,7 @@ const Schedule: React.FC = () => {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="schedule-form space-y-4 max-w-md mx-auto">
+      <form id="booking-form" onSubmit={handleSubmit} className="schedule-form space-y-4 max-w-md mx-auto">
         <fieldset className="booking-times-fieldset" disabled={bookingsLoading}>
           <legend className="booking-times-title">Available times</legend>
           <p className="booking-date-label">{date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</p>
@@ -256,9 +265,9 @@ const Schedule: React.FC = () => {
             })}
           </div>
         </fieldset>
-        <button type="submit" disabled={bookingsLoading || !time} className="booking-submit">
-          {selectedBooking ? "Update Booking" : "Book Appointment"}
-        </button>
+        <p className="booking-submit-hint" role="status">
+          {bookingPending ? "Saving your appointment…" : selectedBooking ? "Select a time, then use Update Booking in the top navigation." : "Select a time, then use Book now in the top navigation to confirm."}
+        </p>
 
         {showSignInPrompt && !currentUser?.id && (
           <div className="booking-auth-alert" role="alert">
