@@ -126,9 +126,10 @@ const Navbar: React.FC = () => {
             <button
               type="button"
               className="book-button"
-              onClick={() => document.getElementById("booking-form")?.dispatchEvent(
-                new Event("submit", { bubbles: true, cancelable: true })
-              )}
+              onClick={() => {
+                const form = document.getElementById("booking-form") as HTMLFormElement | null;
+                form?.requestSubmit();
+              }}
             >
               Book now
             </button>
