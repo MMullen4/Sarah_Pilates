@@ -123,20 +123,20 @@ const Navbar: React.FC = () => {
             <NavLink to="/contact">Contact</NavLink>
           </div>
           <Link to="/schedule" className="book-button">Book now</Link>
-        <div className="relative" ref={menuRef}>
+        <div className="account-menu-wrap" ref={menuRef}>
           <button
             onClick={() => setIsMenuOpen((v) => !v)}
             aria-expanded={isMenuOpen}
             aria-label="Toggle navigation menu"
             className="account-menu-button" aria-controls="account-navigation"
           >
-            {isMenuOpen ? "Close" : token ? "Account / Menu" : "Sign in / Menu"}
+            <span className="account-menu-icon" aria-hidden="true">{isMenuOpen ? "✕" : "☰"}</span><span className="account-menu-label">{isMenuOpen ? "Close" : token ? "Account / Menu" : "Sign in / Menu"}</span>
           </button>
 
           {isMenuOpen && (
             <div
               id="account-navigation"
-              className="absolute right-0 mt-2 w-80 md:w-96 bg-white rounded-lg shadow-lg border z-50"
+              className="account-dropdown"
             >
               <div className="p-4 space-y-3">
                 {/* Navigation Links */}
@@ -184,7 +184,7 @@ const Navbar: React.FC = () => {
                 {token ? (
                   <button
                     onClick={handleLogout}
-                    className="w-full bg-orange-600 text-white py-3 px-4 rounded hover:bg-orange-700 text-lg"
+                    className="account-logout-button"
                   >
                     Logout
                   </button>
