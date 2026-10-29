@@ -57,7 +57,7 @@ export const resolvers = {
           time: booking.time,
           name: "Booked",
           email: "",
-          user: booking.user,
+          user: null,
         };
       });
 
