@@ -44,6 +44,7 @@ const Schedule: React.FC = () => {
   const [showSignInPrompt, setShowSignInPrompt] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [bookingPending, setBookingPending] = useState(false);
+  const [confirmationWasEdit, setConfirmationWasEdit] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [confirmation, setConfirmation] = useState<{
     date: Date;
@@ -109,6 +110,7 @@ const Schedule: React.FC = () => {
     }
     if (bookingPending) return;
     const isoDate = date.getTime().toString();
+    const wasEditing = Boolean(selectedBooking);
     setBookingPending(true);
 
     try {
@@ -136,6 +138,7 @@ const Schedule: React.FC = () => {
         toast.success("Appointment booked");
       }
 
+      setConfirmationWasEdit(wasEditing);
       setConfirmation({ date, time });
       setSubmitted(true);
       setTime("");
@@ -265,6 +268,12 @@ const Schedule: React.FC = () => {
             })}
           </div>
         </fieldset>
+        {selectedBooking && (
+          <div className="booking-edit-notice" role="status">
+            <span>Editing an existing appointment. Choose the new date and time, then tap Book now above to save.</span>
+            <button type="button" className="booking-action" onClick={() => { setSelectedBooking(null); setTime(""); setSubmitted(false); }}>Cancel edit</button>
+          </div>
+        )}
         <p className="booking-submit-hint" role="status">
           {bookingPending ? "Saving your appointment…" : selectedBooking ? "Select a time, then use Book now in the top navigation to save the change." : "Select a time, then use Book now in the top navigation to confirm."}
         </p>
@@ -278,7 +287,7 @@ const Schedule: React.FC = () => {
 
         {submitted && confirmation && (
           <p className="text-green-600 text-center mt-4">
-            ✅ Appointment {selectedBooking ? "updated" : "booked"} for{" "}
+            ✅ Appointment {confirmationWasEdit ? "updated" : "booked"} for{" "}
             {confirmation.date.toDateString()} from{" "}
             {formatTime12Hour(confirmation.time)} to{" "}
             {formatTime12Hour(addMinutes(confirmation.time, 50))}!
