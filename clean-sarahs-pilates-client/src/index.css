@@ -255,3 +255,21 @@ textarea:focus-visible { outline:2px solid #111; outline-offset:5px; }
   .site-navigation { gap:6px; }
   .site-navigation .book-button { padding:9px 10px; }
 }
+
+/* Auth buttons: override generic dropdown button color with explicit contrast. */
+.site-nav .account-dropdown .account-auth-submit,
+.site-nav .account-dropdown .account-logout-button {
+  display:block; width:100%; padding:13px 16px; border:1px solid #292d34;
+  border-radius:8px; background:#292d34; color:#ffffff !important;
+  -webkit-text-fill-color:#ffffff; font-size:16px; font-weight:600;
+  text-align:center; cursor:pointer; opacity:1;
+}
+.site-nav .account-dropdown .account-auth-submit:hover,
+.site-nav .account-dropdown .account-logout-button:hover { background:#444a54; color:#fff !important; }
+.site-nav .account-dropdown .account-auth-submit:disabled { opacity:.55; cursor:wait; }
+.site-nav .account-dropdown .account-auth-switch {
+  display:block; width:100%; padding:12px; background:#fff; color:#1f2937 !important;
+  -webkit-text-fill-color:#1f2937; font-size:15px; text-decoration:underline; text-align:center;
+}
+.site-nav .account-dropdown input { background:#fff; color:#111 !important; -webkit-text-fill-color:#111; }
+.site-nav .account-dropdown input::placeholder { color:#666; }
