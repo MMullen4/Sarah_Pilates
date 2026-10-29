@@ -49,7 +49,7 @@ export const resolvers = {
       // booking owner or a database-verified administrator.
       const viewer = context.user?.id ? await User.findById(context.user.id).lean() : null;
       const isAdmin = viewer?.role === "admin";
-      return upcoming.map((booking: any) => {
+      return (isAdmin ? bookings : upcoming).map((booking: any) => {
         if (isAdmin || (viewer && String(booking.user) === String(viewer._id))) return booking;
         return {
           _id: booking._id,
@@ -183,14 +183,22 @@ export const resolvers = {
       const booking = await Booking.findById(id);
       if (!booking) throw new Error("Booking not found");
 
-      const isAdmin = context.user.role === "admin";
+      const actingUser = await User.findById(context.user.id).lean();
+      const isAdmin = actingUser?.role === "admin";
       if (!isAdmin && booking.user.toString() !== context.user.id) {
         throw new Error("You can only edit your own appointments");
       }
 
-      // prevent user field modification
-      const { user, ...safeInput } = input || {};
-      return await Booking.findByIdAndUpdate(id, safeInput, { new: true });
+      const dateStr = String(input?.date ?? "").trim();
+      const timeStr = String(input?.time ?? "").trim();
+      if (!Number.isFinite(Number(dateStr)) || !/^([01]\\d|2[0-3]):[0-5]\\d$/.test(timeStr)) {
+        throw new Error("Invalid appointment date or time");
+      }
+      const conflict = await Booking.findOne({
+        _id: { $ne: booking._id }, date: dateStr, time: timeStr,
+      }).lean();
+      if (conflict) throw new Error("That time slot is already booked");
+      return await Booking.findByIdAndUpdate(id, { date: dateStr, time: timeStr }, { new: true });
     },
 
     // ✅ Delete booking (with ownership check)
