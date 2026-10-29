@@ -77,7 +77,7 @@ const Schedule: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser?.id) {
-      toast.error("Please log in to book appointments");
+      toast.error("Please sign in or sign up to book a session.", { duration: 5000 });
       return;
     }
 
@@ -194,8 +194,8 @@ const Schedule: React.FC = () => {
         Choose a date and time below.
       </p>
 
-      <div className="flex justify-center mb-6 md:mb-12 lg:mb-6">
-        <div className="my-3 sm:my-7 md:my-8 lg:my-8">
+      <div className="booking-calendar-wrap">
+        <div className="booking-calendar-inner">
           <Calendar
             onChange={(value) => setDate(value as Date)}
             value={date}
@@ -228,7 +228,10 @@ const Schedule: React.FC = () => {
 
         <button
           type="submit"
-          disabled={!currentUser?.id || bookingsLoading}
+          disabled={bookingsLoading}
+          onClick={() => {
+            if (!currentUser?.id) toast.error("Please sign in or sign up to book a session.", { duration: 5000 });
+          }}
           className="booking-submit"
         >
           {selectedBooking ? "Update Booking" : "Book Appointment"}
