@@ -266,7 +266,7 @@ const Schedule: React.FC = () => {
           </div>
         </fieldset>
         <p className="booking-submit-hint" role="status">
-          {bookingPending ? "Saving your appointment…" : selectedBooking ? "Select a time, then use Update Booking in the top navigation." : "Select a time, then use Book now in the top navigation to confirm."}
+          {bookingPending ? "Saving your appointment…" : selectedBooking ? "Select a time, then use Book now in the top navigation to save the change." : "Select a time, then use Book now in the top navigation to confirm."}
         </p>
 
         {showSignInPrompt && !currentUser?.id && (
