@@ -227,3 +227,31 @@ textarea:focus-visible { outline:2px solid #111; outline-offset:5px; }
 .booking-time-status { font-size:11px; font-weight:400; }
 .booking-auth-alert { max-width:430px; margin:0 auto 18px; padding:14px; background:#fff; color:#24272d; border-radius:8px; text-align:center; }
 @media(max-width:420px) { .booking-time-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+
+/* Navigation repair: mobile header stays visible; dropdown and logout remain legible. */
+.site-nav { position:relative; z-index:100; overflow:visible; }
+.site-nav-inner { min-width:0; }
+.account-menu-wrap { position:relative; flex-shrink:0; }
+.account-menu-button { display:inline-flex; align-items:center; gap:8px; color:#fff; cursor:pointer; }
+.account-menu-icon { display:inline-block; font-size:19px; line-height:1; }
+.account-dropdown { position:absolute; top:100%; right:0; margin-top:12px; width:min(380px,calc(100vw - 32px)); max-height:min(75vh,650px); overflow-y:auto; overscroll-behavior:contain; z-index:200; background:#fff; color:#222; border:1px solid #d1d5db; border-radius:12px; box-shadow:0 12px 32px rgba(0,0,0,.3); }
+.account-dropdown a,.account-dropdown button:not(.account-logout-button) { color:#222; }
+.account-logout-button { display:block; width:100%; padding:13px 16px; border-radius:8px; background:#292d34; color:#fff !important; font-size:16px; font-weight:600; text-align:center; cursor:pointer; }
+.account-logout-button:hover { background:#424751; }
+@media(max-width:650px) {
+  .site-nav { padding:16px 5vw; }
+  .site-nav-inner { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; }
+  .site-brand { font-size:clamp(17px,5vw,22px); white-space:normal; min-width:0; }
+  .site-navigation { display:flex; align-items:center; justify-content:flex-end; flex-wrap:nowrap; gap:10px; }
+  .site-navigation .desktop-links { display:none; }
+  .site-navigation .book-button { padding:10px 13px; font-size:12px; }
+  .account-menu-button { padding:10px 4px; font-size:12px; text-decoration:none; }
+  .account-menu-label { display:none; }
+  .account-menu-icon { font-size:24px; }
+  .account-dropdown { position:fixed; top:72px; right:16px; left:16px; width:auto; max-height:calc(100dvh - 90px); }
+}
+@media(max-width:380px) {
+  .site-brand { font-size:17px; }
+  .site-navigation { gap:6px; }
+  .site-navigation .book-button { padding:9px 10px; }
+}
