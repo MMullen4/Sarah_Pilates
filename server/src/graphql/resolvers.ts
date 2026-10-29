@@ -33,7 +33,7 @@ export const resolvers = {
       const upcoming = bookings.filter((booking: any) => {
         if (!booking.date || !booking.time) return false;
         const raw = String(booking.date).trim();
-        const numeric = /^\\d+$/.test(raw);
+        const numeric = /^[0-9]+$/.test(raw);
         const baseMs = numeric ? Number(raw) : Date.parse(raw);
         if (!Number.isFinite(baseMs)) return false;
         const [hours, minutes] = String(booking.time).split(":").map(Number);
