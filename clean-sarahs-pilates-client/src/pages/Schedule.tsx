@@ -49,7 +49,11 @@ const Schedule: React.FC = () => {
     time: string;
   } | null>(null);
 
-  const { data, loading: bookingsLoading, refetch } = useQuery(GET_BOOKINGS);
+  const { data, loading: bookingsLoading, error: bookingsError, refetch } = useQuery(GET_BOOKINGS, {
+    fetchPolicy: "network-only",
+    nextFetchPolicy: "network-only",
+    pollInterval: 30000,
+  });
   const bookings: Booking[] = data?.getBookings || [];
 
   const [bookAppointment] = useMutation(BOOK_APPOINTMENT);
@@ -273,11 +277,13 @@ const Schedule: React.FC = () => {
         )}
       </form>
 
+      {bookingsError && <p role="alert" className="booking-auth-alert">Could not load appointments. Please refresh the page.</p>}
       {currentUser?.id && <div className="mt-10">
         <h2 className="booking-list-heading">
           {isAdmin ? "Manage All Bookings" : "My Bookings"}
         </h2>
 
+        {bookingsLoading && bookings.length === 0 && <p>Loading appointments…</p>}
         {upcomingSorted.filter((booking) => isAdmin || booking.email === currentUser?.email).map((booking) => (
           <div
             key={booking._id}
