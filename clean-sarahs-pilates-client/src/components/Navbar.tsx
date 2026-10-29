@@ -122,7 +122,19 @@ const Navbar: React.FC = () => {
             <NavLink to="/about">About</NavLink>
             <NavLink to="/contact">Contact</NavLink>
           </div>
-          <Link to="/schedule" className="book-button">Book now</Link>
+          {location.pathname === "/schedule" ? (
+            <button
+              type="button"
+              className="book-button"
+              onClick={() => document.getElementById("booking-form")?.dispatchEvent(
+                new Event("submit", { bubbles: true, cancelable: true })
+              )}
+            >
+              Book now
+            </button>
+          ) : (
+            <Link to="/schedule" className="book-button">Book now</Link>
+          )}
         <div className="account-menu-wrap" ref={menuRef}>
           <button
             onClick={() => setIsMenuOpen((v) => !v)}
