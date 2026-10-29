@@ -58,7 +58,7 @@ const Schedule: React.FC = () => {
   // Get current user info from JWT
   const currentUser = React.useMemo(() => {
     const token = localStorage.getItem("token");
-    if (!token) return { id: null, email: null };
+    if (!token) return { id: null, email: null, role: null };
     try {
       const payload = JSON.parse(atob(token.split(".")[1] || ""));
       return {
@@ -76,7 +76,7 @@ const Schedule: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentUser) {
+    if (!currentUser?.id) {
       toast.error("Please log in to book appointments");
       return;
     }
@@ -179,18 +179,18 @@ const Schedule: React.FC = () => {
   }, [bookings]);
 
   return (
-    <div className="p-6 max-w-4xl mx-auto bg-white shadow-md rounded-lg mt-10">
-      <h1 className="text-4xl md:text-4xl lg:text-3xl font-bold text-orange-600 mb-4 text-center">
+    <main className="booking-page">
+      <h1 className="booking-heading">
         Schedule a Session
       </h1>
 
       <img
         src="https://as2.ftcdn.net/v2/jpg/05/85/94/75/1000_F_585947577_bzC0PesLqbJRpmCCnqnTngwX78o0ZStt.jpg"
         alt="Pilates class"
-        className="rounded-lg mb-6 sm:mb-8 md:mb-12 lg:mb-6 w-2/3 mx-auto object-cover h-64"
+        className="booking-photo"
       />
 
-      <p className="text-gray-700 text-center mb-4">
+      <p className="booking-subtitle">
         Choose a date and time below.
       </p>
 
@@ -204,6 +204,7 @@ const Schedule: React.FC = () => {
         </div>
       </div>
 
+      {!currentUser?.id && <p className="booking-signin-notice">Please sign in or create an account using the menu above to reserve a session. You can still view available times below.</p>}
       <form onSubmit={handleSubmit} className="schedule-form space-y-4 max-w-md mx-auto">
         <select
           name="time"
@@ -227,7 +228,8 @@ const Schedule: React.FC = () => {
 
         <button
           type="submit"
-          className="w-full bg-orange-500 text-white py-2 px-4 rounded hover:bg-orange-600"
+          disabled={!currentUser?.id || bookingsLoading}
+          className="booking-submit"
         >
           {selectedBooking ? "Update Booking" : "Book Appointment"}
         </button>
@@ -242,12 +244,12 @@ const Schedule: React.FC = () => {
         )}
       </form>
 
-      <div className="mt-10">
-        <h2 className="text-xl font-semibold mb-4 text-orange-700 text-center">
+      {currentUser?.id && <div className="mt-10">
+        <h2 className="booking-list-heading">
           Existing Bookings
         </h2>
 
-        {upcomingSorted.map((booking) => (
+        {upcomingSorted.filter((booking) => isAdmin || booking.email === currentUser?.email).map((booking) => (
           <div
             key={booking._id}
             className="border rounded p-4 mb-3 flex justify-between items-center"
@@ -269,13 +271,13 @@ const Schedule: React.FC = () => {
                 <>
                   <button
                     onClick={() => handleEdit(booking)}
-                    className="bg-yellow-400 px-3 py-1 rounded"
+                    className="booking-action"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDelete(booking)}
-                    className="bg-red-500 text-white px-3 py-1 rounded"
+                    className="booking-action"
                   >
                     Delete
                   </button>
@@ -284,8 +286,8 @@ const Schedule: React.FC = () => {
             </div>
           </div>
         ))}
-      </div>
-    </div>
+      </div>}
+    </main>
   );
 };
 
