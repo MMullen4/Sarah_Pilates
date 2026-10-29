@@ -76,7 +76,12 @@ const Schedule: React.FC = () => {
   const isAdmin = currentUser?.role === "admin";
   const showAuthPrompt = () => {
     setShowSignInPrompt(true);
-    toast.error("Please sign in or sign up to book a session.", { duration: 5000 });
+    toast.custom((t) => (
+      <div className="booking-auth-toast" role="alert">
+        <span>Please sign in or sign up to book a session.</span>
+        <button type="button" aria-label="Dismiss sign-in message" onClick={() => { toast.dismiss(t.id); setShowSignInPrompt(false); }}>✕</button>
+      </div>
+    ), { duration: 5000 });
   };
   const changeDate = (next: Date) => {
     setDate(next);
@@ -225,7 +230,7 @@ const Schedule: React.FC = () => {
 
       {!currentUser?.id && <p className="booking-signin-notice">Browse available times below. Sign in or create an account using the menu above to reserve a session.</p>}
       {showSignInPrompt && !currentUser?.id && (
-        <div className="booking-auth-alert" role="alert">Please sign in or sign up using the account menu above to book a session.</div>
+        <div className="booking-auth-alert" role="alert"><span>Please sign in or sign up using the account menu above to book a session.</span><button type="button" aria-label="Dismiss sign-in message" onClick={() => setShowSignInPrompt(false)}>✕</button></div>
       )}
       <form onSubmit={handleSubmit} className="schedule-form space-y-4 max-w-md mx-auto">
         <fieldset className="booking-times-fieldset" disabled={bookingsLoading}>
@@ -266,10 +271,10 @@ const Schedule: React.FC = () => {
 
       {currentUser?.id && <div className="mt-10">
         <h2 className="booking-list-heading">
-          {isAdmin ? "Manage Bookings" : "My Bookings"}
+          {isAdmin ? "Manage All Bookings" : "My Bookings"}
         </h2>
 
-        {upcomingSorted.filter((booking) => isAdmin || booking.email === currentUser?.email).map((booking) => (
+        {(isAdmin ? bookings : upcomingSorted.filter((booking) => booking.email === currentUser?.email)).map((booking) => (
           <div
             key={booking._id}
             className="border rounded p-4 mb-3 flex justify-between items-center"
