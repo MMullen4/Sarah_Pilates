@@ -76,12 +76,6 @@ const Schedule: React.FC = () => {
   const isAdmin = currentUser?.role === "admin";
   const showAuthPrompt = () => {
     setShowSignInPrompt(true);
-    toast.custom((t) => (
-      <div className="booking-auth-toast" role="alert">
-        <span>Please sign in or sign up to book a session.</span>
-        <button type="button" aria-label="Dismiss sign-in message" onClick={() => { toast.dismiss(t.id); setShowSignInPrompt(false); }}>✕</button>
-      </div>
-    ), { duration: 5000 });
   };
   const changeDate = (next: Date) => {
     setDate(next);
@@ -228,10 +222,6 @@ const Schedule: React.FC = () => {
         </div>
       </div>
 
-      {!currentUser?.id && <p className="booking-signin-notice">Browse available times below. Sign in or create an account using the menu above to reserve a session.</p>}
-      {showSignInPrompt && !currentUser?.id && (
-        <div className="booking-auth-alert" role="alert"><span>Please sign in or sign up using the account menu above to book a session.</span><button type="button" aria-label="Dismiss sign-in message" onClick={() => setShowSignInPrompt(false)}>✕</button></div>
-      )}
       <form onSubmit={handleSubmit} className="schedule-form space-y-4 max-w-md mx-auto">
         <fieldset className="booking-times-fieldset" disabled={bookingsLoading}>
           <legend className="booking-times-title">Available times</legend>
@@ -258,6 +248,13 @@ const Schedule: React.FC = () => {
         <button type="submit" disabled={bookingsLoading || !time} className="booking-submit">
           {selectedBooking ? "Update Booking" : "Book Appointment"}
         </button>
+
+        {showSignInPrompt && !currentUser?.id && (
+          <div className="booking-auth-alert" role="alert">
+            <span>Please sign in or sign up using the account menu above to book a session.</span>
+            <button type="button" aria-label="Dismiss sign-in message" onClick={() => setShowSignInPrompt(false)}>✕</button>
+          </div>
+        )}
 
         {submitted && confirmation && (
           <p className="text-green-600 text-center mt-4">
