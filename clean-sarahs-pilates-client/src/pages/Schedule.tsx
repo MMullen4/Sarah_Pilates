@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { useMutation, useQuery } from "@apollo/client";
@@ -41,6 +41,7 @@ const addMinutes = (time24: string, minutes: number) => {
 const Schedule: React.FC = () => {
   const [date, setDate] = useState<Date>(new Date());
   const [time, setTime] = useState("");
+  const [showSignInPrompt, setShowSignInPrompt] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [confirmation, setConfirmation] = useState<{
@@ -73,11 +74,28 @@ const Schedule: React.FC = () => {
   }, []);
 
   const isAdmin = currentUser?.role === "admin";
+  const showAuthPrompt = () => {
+    setShowSignInPrompt(true);
+    toast.error("Please sign in or sign up to book a session.", { duration: 5000 });
+  };
+  const changeDate = (next: Date) => {
+    setDate(next);
+    setTime("");
+    setSubmitted(false);
+    setShowSignInPrompt(false);
+  };
+  const availableHours = Array.from({ length: 10 }, (_, i) => `${String(i + 8).padStart(2, "0")}:00`);
+  const isPastSlot = (slot: string) => {
+    const [hours, minutes] = slot.split(":").map(Number);
+    const at = new Date(date);
+    at.setHours(hours, minutes, 0, 0);
+    return at.getTime() < Date.now();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser?.id) {
-      toast.error("Please sign in or sign up to book a session.", { duration: 5000 });
+      showAuthPrompt();
       return;
     }
 
@@ -197,43 +215,40 @@ const Schedule: React.FC = () => {
       <div className="booking-calendar-wrap">
         <div className="booking-calendar-inner">
           <Calendar
-            onChange={(value) => setDate(value as Date)}
+            onChange={(value) => changeDate(value as Date)}
             value={date}
             tileDisabled={({ date }) => isPastDate(date)}
           />
         </div>
       </div>
 
-      {!currentUser?.id && <p className="booking-signin-notice">Please sign in or create an account using the menu above to reserve a session. You can still view available times below.</p>}
+      {!currentUser?.id && <p className="booking-signin-notice">Browse available times below. Sign in or create an account using the menu above to reserve a session.</p>}
+      {showSignInPrompt && !currentUser?.id && (
+        <div className="booking-auth-alert" role="alert">Please sign in or sign up using the account menu above to book a session.</div>
+      )}
       <form onSubmit={handleSubmit} className="schedule-form space-y-4 max-w-md mx-auto">
-        <select
-          name="time"
-          required
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-          className="w-full border p-2 rounded"
-        >
-          <option value="">Select Time</option>
-          {Array.from({ length: 10 }, (_, i) => {
-            const hour = 8 + i;
-            const timeString = `${hour.toString().padStart(2, "0")}:00`;
-            const isBooked = bookedTimes.includes(timeString);
-            return (
-              <option key={timeString} value={timeString} disabled={isBooked}>
-                {formatTime12Hour(timeString)} {isBooked ? "(Booked)" : ""}
-              </option>
-            );
-          })}
-        </select>
-
-        <button
-          type="submit"
-          disabled={bookingsLoading}
-          onClick={() => {
-            if (!currentUser?.id) toast.error("Please sign in or sign up to book a session.", { duration: 5000 });
-          }}
-          className="booking-submit"
-        >
+        <fieldset className="booking-times-fieldset" disabled={bookingsLoading}>
+          <legend className="booking-times-title">Available times</legend>
+          <p className="booking-date-label">{date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</p>
+          <div className="booking-time-grid">
+            {availableHours.map((slot) => {
+              const booked = bookedTimes.includes(slot);
+              const past = isPastSlot(slot);
+              const unavailable = (booked && selectedBooking?.time !== slot) || past;
+              return (
+                <button type="button" key={slot}
+                  className={`booking-time-slot ${unavailable ? "is-unavailable" : ""} ${time === slot ? "is-selected" : ""}`}
+                  disabled={unavailable}
+                  aria-pressed={time === slot}
+                  onClick={() => { setTime(slot); setShowSignInPrompt(false); }}>
+                  <span>{formatTime12Hour(slot)}</span>
+                  <span className="booking-time-status">{booked && selectedBooking?.time !== slot ? "Booked" : past ? "Past" : time === slot ? "Selected" : "Available"}</span>
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
+        <button type="submit" disabled={bookingsLoading || !time} className="booking-submit">
           {selectedBooking ? "Update Booking" : "Book Appointment"}
         </button>
 
@@ -249,7 +264,7 @@ const Schedule: React.FC = () => {
 
       {currentUser?.id && <div className="mt-10">
         <h2 className="booking-list-heading">
-          Existing Bookings
+          {isAdmin ? "Manage Bookings" : "My Bookings"}
         </h2>
 
         {upcomingSorted.filter((booking) => isAdmin || booking.email === currentUser?.email).map((booking) => (
@@ -265,9 +280,7 @@ const Schedule: React.FC = () => {
                 </strong>{" "}
                 at <strong>{formatTime12Hour(booking.time)}</strong>
               </p>
-              <p className="text-sm text-gray-600">
-                {booking.name} ({booking.email})
-              </p>
+              {isAdmin && <p className="text-sm text-gray-600">{booking.name} ({booking.email})</p>}
             </div>
             <div className="space-x-2">
               {(isAdmin || booking.email === currentUser?.email) && (
