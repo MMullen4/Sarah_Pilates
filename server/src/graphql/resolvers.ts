@@ -32,24 +32,23 @@ export const resolvers = {
 
       const upcoming = bookings.filter((booking: any) => {
         if (!booking.date || !booking.time) return false;
-
-        const dateStr = String(booking.date);
-        const slotMs = Number.isFinite(+dateStr)
-          ? +dateStr
-          : Date.parse(dateStr);
-        if (!Number.isFinite(slotMs)) return false;
-
-        const slotDate = new Date(slotMs);
-        const [hours, minutes] = booking.time.split(":").map(Number);
+        const raw = String(booking.date).trim();
+        const numeric = /^\\d+$/.test(raw);
+        const baseMs = numeric ? Number(raw) : Date.parse(raw);
+        if (!Number.isFinite(baseMs)) return false;
+        const [hours, minutes] = String(booking.time).split(":").map(Number);
+        if (!Number.isInteger(hours) || !Number.isInteger(minutes) ||
+            hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return false;
+        const slotDate = new Date(baseMs);
+        if (Number.isNaN(slotDate.getTime())) return false;
         slotDate.setHours(hours, minutes, 0, 0);
-
         return slotDate.getTime() >= now.getTime();
       });
       // Return availability to everyone, but customer details only to the
       // booking owner or a database-verified administrator.
       const viewer = context.user?.id ? await User.findById(context.user.id).lean() : null;
       const isAdmin = viewer?.role === "admin";
-      return (isAdmin ? bookings : upcoming).map((booking: any) => {
+      return upcoming.map((booking: any) => {
         if (isAdmin || (viewer && String(booking.user) === String(viewer._id))) return booking;
         return {
           _id: booking._id,
