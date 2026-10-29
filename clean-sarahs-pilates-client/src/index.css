@@ -297,3 +297,6 @@ textarea:focus-visible { outline:2px solid #111; outline-offset:5px; }
 .booking-submit-hint { text-align:center; color:#f5f5f7; font-size:14px; line-height:1.6; margin:16px 0 24px; }
 .site-nav button.book-button { border:0; cursor:pointer; font-family:inherit; }
 .site-nav button.book-button:focus-visible { outline:2px solid #fff; outline-offset:3px; }
+
+.booking-edit-notice { border:1px solid #a9adb5; border-radius:10px; padding:14px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; color:#fff; font-size:14px; line-height:1.5; }
+.booking-edit-notice .booking-action { margin:0; white-space:nowrap; }
