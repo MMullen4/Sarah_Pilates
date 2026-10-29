@@ -153,7 +153,14 @@ const Schedule: React.FC = () => {
     setSubmitted(false);
     setSelectedBooking(booking);
     setTime(booking.time);
-    setDate(new Date(parseInt(booking.date)));
+    const bookingDate = parseBookingDate(booking.date);
+    if (bookingDate) setDate(bookingDate);
+  };
+
+  const parseBookingDate = (raw: string) => {
+    const value = String(raw).trim();
+    const timestamp = /^\d+$/.test(value) ? Number(value) : Date.parse(value);
+    return Number.isFinite(timestamp) ? new Date(timestamp) : null;
   };
 
   const isSameDay = (d1: Date, d2: Date) =>
@@ -165,7 +172,7 @@ const Schedule: React.FC = () => {
   };
 
   const bookedTimes = bookings
-    .filter((b) => isSameDay(new Date(parseInt(b.date)), date))
+    .filter((b) => (() => { const parsed = parseBookingDate(b.date); return parsed ? isSameDay(parsed, date) : false; })())
     .map((b) => b.time);
 
   const upcomingSorted = React.useMemo(() => {
@@ -183,12 +190,12 @@ const Schedule: React.FC = () => {
 
     return (bookings || [])
       .filter((b) => {
-        const ts = parseInt(b.date);
-        return !Number.isNaN(ts) && isFutureOrToday(ts);
+        const parsed = parseBookingDate(b.date);
+        return parsed !== null && isFutureOrToday(parsed.getTime());
       })
       .sort((a, b) => {
-        const da = parseInt(a.date),
-          db = parseInt(b.date);
+        const da = parseBookingDate(a.date)?.getTime() ?? 0,
+          db = parseBookingDate(b.date)?.getTime() ?? 0;
         if (da !== db) return da - db;
         const ma = toMinutes(a.time),
           mb = toMinutes(b.time);
@@ -230,7 +237,7 @@ const Schedule: React.FC = () => {
             {availableHours.map((slot) => {
               const booked = bookedTimes.includes(slot);
               const past = isPastSlot(slot);
-              const editingOriginalSlot = selectedBooking?.time === slot && isSameDay(new Date(Number(selectedBooking.date)), date);
+              const editingOriginalSlot = selectedBooking?.time === slot && (() => { const parsed = parseBookingDate(selectedBooking.date); return parsed ? isSameDay(parsed, date) : false; })();
               const unavailable = (booked && !editingOriginalSlot) || past;
               return (
                 <button type="button" key={slot}
@@ -271,7 +278,7 @@ const Schedule: React.FC = () => {
           {isAdmin ? "Manage All Bookings" : "My Bookings"}
         </h2>
 
-        {(isAdmin ? bookings : upcomingSorted.filter((booking) => booking.email === currentUser?.email)).map((booking) => (
+        {upcomingSorted.filter((booking) => isAdmin || booking.email === currentUser?.email).map((booking) => (
           <div
             key={booking._id}
             className="border rounded p-4 mb-3 flex justify-between items-center"
@@ -280,7 +287,7 @@ const Schedule: React.FC = () => {
               <p>
                 📅{" "}
                 <strong>
-                  {new Date(parseInt(booking.date)).toDateString()}
+                  {parseBookingDate(booking.date)?.toDateString() ?? "Date unavailable"}
                 </strong>{" "}
                 at <strong>{formatTime12Hour(booking.time)}</strong>
               </p>
