@@ -188,3 +188,24 @@ textarea:focus-visible { outline:2px solid #111; outline-offset:5px; }
 .about-expertise h2 { font-family:Georgia,'Times New Roman',serif; font-weight:400; font-size:clamp(36px,4.2vw,64px); line-height:1.12; letter-spacing:-.035em; color:#fff; margin:0 0 25px; }
 .about-expertise p { color:#f5f5f7; font-size:17px; line-height:1.8; margin:0 0 20px; }
 @media(max-width:650px) { .about-page > .about-reference-layout { padding-top:35px; } .about-reference-copy > h1 { font-size:clamp(36px,8vw,52px); } .about-expertise { margin-top:50px; padding-top:38px; } .about-expertise p { font-size:16px; } }
+
+/* Booking page visual refresh — preserves booking and authentication logic. */
+.booking-page { max-width:980px; margin:40px auto 80px; padding:48px clamp(20px,5vw,65px); background:#292d34; color:#fff; }
+.booking-heading { font-family:Georgia,'Times New Roman',serif; font-size:clamp(40px,5vw,70px); font-weight:400; text-align:center; line-height:1.1; margin:0 0 24px; }
+.booking-subtitle { text-align:center; color:#f5f5f7; font-size:16px; margin:0 0 26px; }
+.booking-photo { display:none; }
+.booking-page .react-calendar { width:min(100%,430px); border:1px solid #d8d8db; border-radius:10px; padding:14px; }
+.booking-page .react-calendar__tile--active, .booking-page .react-calendar__tile--active:enabled:hover { background:#292d34; color:#fff; border-radius:5px; }
+.booking-page .react-calendar__tile--now { background:#e6e7ea; color:#111; }
+.booking-page .react-calendar__tile--now.react-calendar__tile--active { background:#292d34; color:#fff; }
+.booking-page .schedule-form { max-width:430px; margin:0 auto; }
+.booking-page .schedule-form select { width:100%; border:1px solid #d8d8db; border-radius:7px; padding:13px; }
+.booking-submit { display:block; width:100%; background:#fff; color:#222; border-radius:30px; padding:14px 24px; font-weight:600; }
+.booking-submit:hover:not(:disabled) { background:#e8e8eb; }
+.booking-submit:disabled { opacity:.55; cursor:not-allowed; }
+.booking-signin-notice { max-width:530px; margin:0 auto 22px; text-align:center; color:#f5f5f7; line-height:1.6; }
+.booking-list-heading { font-family:Georgia,'Times New Roman',serif; font-size:clamp(28px,3vw,42px); text-align:center; font-weight:400; margin-bottom:20px; }
+.booking-page .text-gray-600 { color:#e5e7eb; }
+.booking-action { background:#fff; color:#222; border:1px solid #ddd; border-radius:6px; padding:7px 12px; margin:4px; }
+.booking-action:hover { background:#e5e7eb; }
+@media(max-width:650px) { .booking-page { margin:15px auto 50px; padding:25px 6vw; } }
