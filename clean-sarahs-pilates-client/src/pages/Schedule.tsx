@@ -245,6 +245,13 @@ const Schedule: React.FC = () => {
         </div>
       </div>
 
+      {showSignInPrompt && !currentUser?.id && (
+        <div className="booking-auth-alert" role="alert">
+          <span>Please sign in or sign up using the account menu above to book a session.</span>
+          <button type="button" aria-label="Dismiss sign-in message" onClick={() => setShowSignInPrompt(false)}>✕</button>
+        </div>
+      )}
+
       <form id="booking-form" onSubmit={handleSubmit} className="schedule-form space-y-4 max-w-md mx-auto">
         <fieldset className="booking-times-fieldset" disabled={bookingsLoading}>
           <legend className="booking-times-title">Available times</legend>
@@ -277,13 +284,6 @@ const Schedule: React.FC = () => {
         <p className="booking-submit-hint" role="status">
           {bookingPending ? "Saving your appointment…" : selectedBooking ? "Select a time, then use Book now in the top navigation to save the change." : "Select a time, then use Book now in the top navigation to confirm."}
         </p>
-
-        {showSignInPrompt && !currentUser?.id && (
-          <div className="booking-auth-alert" role="alert">
-            <span>Please sign in or sign up using the account menu above to book a session.</span>
-            <button type="button" aria-label="Dismiss sign-in message" onClick={() => setShowSignInPrompt(false)}>✕</button>
-          </div>
-        )}
 
         {submitted && confirmation && (
           <p className="text-green-600 text-center mt-4">
