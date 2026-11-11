@@ -2,26 +2,19 @@ import Booking from "../models/Booking.js";
 import User from "../models/User.js";
 import nodemailer from "nodemailer";
 import jwt from "jsonwebtoken";
+import { getJwtSecret } from "../config/jwt.js";
 
-// const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
-
-const generateToken = (user: any) => {
-  const secret =
-    process.env.JWT_SECRET ||
-    process.env.JWT_SECRET_KEY ||
-    "dev-only-supersecret";
-
-  return jwt.sign(
+const generateToken = (user: any) =>
+  jwt.sign(
     {
-      id: user._id,
+      id: String(user._id),
       email: user.email,
       role: user.role,
       username: user.username,
     },
-    secret,
-    { expiresIn: "7d" }
+    getJwtSecret(),
+    { algorithm: "HS256", expiresIn: "7d" },
   );
-};
 
 export const resolvers = {
   Query: {
@@ -37,8 +30,15 @@ export const resolvers = {
         const baseMs = numeric ? Number(raw) : Date.parse(raw);
         if (!Number.isFinite(baseMs)) return false;
         const [hours, minutes] = String(booking.time).split(":").map(Number);
-        if (!Number.isInteger(hours) || !Number.isInteger(minutes) ||
-            hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return false;
+        if (
+          !Number.isInteger(hours) ||
+          !Number.isInteger(minutes) ||
+          hours < 0 ||
+          hours > 23 ||
+          minutes < 0 ||
+          minutes > 59
+        )
+          return false;
         const slotDate = new Date(baseMs);
         if (Number.isNaN(slotDate.getTime())) return false;
         slotDate.setHours(hours, minutes, 0, 0);
@@ -46,10 +46,15 @@ export const resolvers = {
       });
       // Return availability to everyone, but customer details only to the
       // booking owner or a database-verified administrator.
-      const viewer = context.user?.id ? await User.findById(context.user.id).lean() : null;
+      const viewer = context.user?.id
+        ? await User.findById(context.user.id).lean()
+        : null;
       const isAdmin = viewer?.role === "admin";
+
       return upcoming.map((booking: any) => {
-        if (isAdmin || (viewer && String(booking.user) === String(viewer._id))) return booking;
+        if (isAdmin || (viewer && String(booking.user) === String(viewer._id)))
+          return booking;
+
         return {
           _id: booking._id,
           date: booking.date,
@@ -59,22 +64,9 @@ export const resolvers = {
           user: null,
         };
       });
-
     },
 
-    // // ✅ Sorted & filtered to only return today's and future bookings
-    // getBookingsAdmin: async () => {
-    //   const startOfToday = new Date();
-    //   startOfToday.setHours(0, 0, 0, 0);
-    //   const cutoff = startOfToday.getTime().toString(); // since stored as string
-
-    //   return await Booking.find({ date: { $gte: cutoff } }).sort({
-    //     date: 1,
-    //     time: 1,
-    //   });
-    // },
-
-    services: async () => {
+    services: async () => { // Hardcoded services for demonstration purposes
       return [
         {
           id: "1",
@@ -188,37 +180,42 @@ export const resolvers = {
         throw new Error("You can only edit your own appointments");
       }
 
+      // Validate new date and time
       const dateStr = String(input?.date ?? "").trim();
       const timeStr = String(input?.time ?? "").trim();
-      if (!Number.isFinite(Number(dateStr)) || !/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(timeStr)) {
+      if (
+        !Number.isFinite(Number(dateStr)) ||
+        !/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(timeStr)
+      ) {
         throw new Error("Invalid appointment date or time");
       }
       const conflict = await Booking.findOne({
-        _id: { $ne: booking._id }, date: dateStr, time: timeStr,
+        _id: { $ne: booking._id },
+        date: dateStr,
+        time: timeStr,
       }).lean();
       if (conflict) throw new Error("That time slot is already booked");
-      return await Booking.findByIdAndUpdate(id, { date: dateStr, time: timeStr }, { new: true });
+      return await Booking.findByIdAndUpdate(
+        id,
+        { date: dateStr, time: timeStr },
+        { new: true },
+      );
     },
 
     // ✅ Delete booking (with ownership check)
     deleteBooking: async (_: any, { id }: any, context: any) => {
-      if (!context.user) throw new Error("Unauthorized");
+      if (!context.user?.id) throw new Error("Unauthorized");
+
+      const actingUser = await User.findById(context.user.id).lean();
+      if (!actingUser) throw new Error("Unauthorized");
 
       const booking = await Booking.findById(id);
       if (!booking) throw new Error("Booking not found");
 
-      // Debug logging
-      console.log("Current user ID:", context.user.id);
-      console.log("Booking user ID:", booking.user);
-      console.log("Booking user toString():", booking.user.toString());
-      console.log(
-        "Are they equal?",
-        booking.user.toString() === context.user.id
-      );
-      console.log("User role:", context.user.role);
+      const isAdmin = actingUser.role === "admin";
+      const isOwner = String(booking.user) === String(actingUser._id);
 
-      const isAdmin = context.user.role === "admin";
-      if (!isAdmin && booking.user.toString() !== context.user.id) {
+      if (!isAdmin && !isOwner) {
         throw new Error("You can only remove your own appointments");
       }
 

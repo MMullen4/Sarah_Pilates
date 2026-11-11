@@ -7,9 +7,10 @@ import { LOGIN_USER, REGISTER_USER } from "../graphql/mutations";
 const Navbar: React.FC = () => {
   const [form, setForm] = useState({ username: "", email: "", password: "" });
   const [isRegistering, setIsRegistering] = useState(false);
+  const [authError, setAuthError] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [token, setToken] = useState<string | null>(
-    localStorage.getItem("token")
+    localStorage.getItem("token"),
   );
   const location = useLocation();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -49,6 +50,7 @@ const Navbar: React.FC = () => {
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    setAuthError("");
     try {
       const input: any = {
         email: form.email,
@@ -63,15 +65,14 @@ const Navbar: React.FC = () => {
       const authData = isRegistering ? res.data?.register : res.data?.login;
 
       if (!authData?.token) {
-        console.error("❌ Token not returned by GraphQL mutation");
-        return;
+        throw new Error("Token not returned by GraphQL mutation");
       }
 
       // Persist auth, set welcome, reset UI
       localStorage.setItem("token", authData.token);
       localStorage.setItem(
         "welcomeMessage",
-        `✅ Welcome ${authData.user?.username || authData.user?.email}!`
+        `✅ Welcome ${authData.user?.username || authData.user?.email}!`,
       );
       setToken(authData.token);
       setForm({ username: "", email: "", password: "" });
@@ -81,6 +82,11 @@ const Navbar: React.FC = () => {
       window.location.reload();
     } catch (err) {
       console.error("Auth error:", err);
+      setAuthError(
+        isRegistering
+          ? "We couldn't create your account. Please check your details and try again."
+          : "We couldn't log you in. Please check your email and password and try again.",
+      );
     }
   };
 
@@ -108,11 +114,7 @@ const Navbar: React.FC = () => {
   return (
     <nav className="site-nav" aria-label="Main navigation">
       <div className="site-nav-inner">
-        <Link
-          to="/"
-          className="site-brand"
-          onClick={closeMenu}
-        >
+        <Link to="/" className="site-brand" onClick={closeMenu}>
           Pilates with Sarah
         </Link>
 
@@ -127,142 +129,166 @@ const Navbar: React.FC = () => {
               type="button"
               className="book-button"
               onClick={() => {
-                const form = document.getElementById("booking-form") as HTMLFormElement | null;
+                const form = document.getElementById(
+                  "booking-form",
+                ) as HTMLFormElement | null;
                 form?.requestSubmit();
               }}
             >
               Book now
             </button>
           ) : (
-            <Link to="/schedule" className="book-button">Book now</Link>
+            <Link to="/schedule" className="book-button">
+              Book now
+            </Link>
           )}
-        <div className="account-menu-wrap" ref={menuRef}>
-          <button
-            onClick={() => setIsMenuOpen((v) => !v)}
-            aria-expanded={isMenuOpen}
-            aria-label="Toggle navigation menu"
-            className="account-menu-button" aria-controls="account-navigation"
-          >
-            <span className="account-menu-icon" aria-hidden="true">{isMenuOpen ? "✕" : "☰"}</span><span className="account-menu-label">{isMenuOpen ? "Close" : token ? "Account / Menu" : "Sign in / Menu"}</span>
-          </button>
-
-          {isMenuOpen && (
-            <div
-              id="account-navigation"
-              className="account-dropdown"
+          <div className="account-menu-wrap" ref={menuRef}>
+            <button
+              onClick={() => setIsMenuOpen((v) => !v)}
+              aria-expanded={isMenuOpen}
+              aria-label="Toggle navigation menu"
+              className="account-menu-button"
+              aria-controls="account-navigation"
             >
-              <div className="p-4 space-y-3">
-                {/* Navigation Links */}
-                <div className="space-y-2">
-                  <Link
-                    to="/"
-                    onClick={closeMenu}
-                    className="block text-lg md:text-xl py-2 px-3 hover:bg-orange-50 hover:text-orange-600 rounded transition"
-                  >
-                    Home
-                  </Link>
-                  <Link
-                    to="/services"
-                    onClick={closeMenu}
-                    className="block text-lg md:text-xl py-2 px-3 hover:bg-orange-50 hover:text-orange-600 rounded transition"
-                  >
-                    Services
-                  </Link>
-                  <Link
-                    to="/about"
-                    onClick={closeMenu}
-                    className="block text-lg md:text-xl py-2 px-3 hover:bg-orange-50 hover:text-orange-600 rounded transition"
-                  >
-                    About
-                  </Link>
-                  <Link
-                    to="/contact"
-                    onClick={closeMenu}
-                    className="block text-lg md:text-xl py-2 px-3 hover:bg-orange-50 hover:text-orange-600 rounded transition"
-                  >
-                    Contact
-                  </Link>
-                  <Link
-                    to="/schedule"
-                    onClick={closeMenu}
-                    className="block text-lg md:text-xl py-2 px-3 hover:bg-orange-50 hover:text-orange-600 rounded transition"
-                  >
-                    Schedule
-                  </Link>
-                </div>
+              <span className="account-menu-icon" aria-hidden="true">
+                {isMenuOpen ? "✕" : "☰"}
+              </span>
+              <span className="account-menu-label">
+                {isMenuOpen
+                  ? "Close"
+                  : token
+                    ? "Account / Menu"
+                    : "Sign in / Menu"}
+              </span>
+            </button>
 
-                <hr className="border-gray-200" />
+            {isMenuOpen && (
+              <div id="account-navigation" className="account-dropdown">
+                <div className="p-4 space-y-3">
+                  {/* Navigation Links */}
+                  <div className="space-y-2">
+                    <Link
+                      to="/"
+                      onClick={closeMenu}
+                      className="block text-lg md:text-xl py-2 px-3 hover:bg-orange-50 hover:text-orange-600 rounded transition"
+                    >
+                      Home
+                    </Link>
+                    <Link
+                      to="/services"
+                      onClick={closeMenu}
+                      className="block text-lg md:text-xl py-2 px-3 hover:bg-orange-50 hover:text-orange-600 rounded transition"
+                    >
+                      Services
+                    </Link>
+                    <Link
+                      to="/about"
+                      onClick={closeMenu}
+                      className="block text-lg md:text-xl py-2 px-3 hover:bg-orange-50 hover:text-orange-600 rounded transition"
+                    >
+                      About
+                    </Link>
+                    <Link
+                      to="/contact"
+                      onClick={closeMenu}
+                      className="block text-lg md:text-xl py-2 px-3 hover:bg-orange-50 hover:text-orange-600 rounded transition"
+                    >
+                      Contact
+                    </Link>
+                    <Link
+                      to="/schedule"
+                      onClick={closeMenu}
+                      className="block text-lg md:text-xl py-2 px-3 hover:bg-orange-50 hover:text-orange-600 rounded transition"
+                    >
+                      Schedule
+                    </Link>
+                  </div>
 
-                {/* Auth Section */}
-                {token ? (
-                  <button
-                    onClick={handleLogout}
-                    className="account-logout-button"
-                  >
-                    Logout
-                  </button>
-                ) : (
-                  <form onSubmit={handleAuth} className="space-y-3">
-                    {isRegistering && (
+                  <hr className="border-gray-200" />
+
+                  {/* Auth Section */}
+                  {token ? (
+                    <button
+                      onClick={handleLogout}
+                      className="account-logout-button"
+                    >
+                      Logout
+                    </button>
+                  ) : (
+                    <form onSubmit={handleAuth} className="space-y-3">
+                      {isRegistering && (
+                        <input
+                          type="text"
+                          name="username"
+                          value={form.username}
+                          onChange={handleChange}
+                          placeholder="Username"
+                          required
+                          className="w-full border p-3 rounded text-base"
+                          autoComplete="username"
+                        />
+                      )}
                       <input
-                        type="text"
-                        name="username"
-                        value={form.username}
+                        type="email"
+                        name="email"
+                        value={form.email}
                         onChange={handleChange}
-                        placeholder="Username"
+                        placeholder="Email"
                         required
                         className="w-full border p-3 rounded text-base"
-                        autoComplete="username"
+                        autoComplete="email"
                       />
-                    )}
-                    <input
-                      type="email"
-                      name="email"
-                      value={form.email}
-                      onChange={handleChange}
-                      placeholder="Email"
-                      required
-                      className="w-full border p-3 rounded text-base"
-                      autoComplete="email"
-                    />
-                    <input
-                      type="password"
-                      name="password"
-                      value={form.password}
-                      onChange={handleChange}
-                      placeholder="Password"
-                      required
-                      className="w-full border p-3 rounded text-base"
-                      autoComplete={
-                        isRegistering ? "new-password" : "current-password"
-                      }
-                    />
-                    <button
-                      type="submit"
-                      disabled={loggingIn || registering}
-                      className="account-auth-submit"
-                    >
-                      {isRegistering
-                        ? registering
-                          ? "Signing Up..."
-                          : "Sign Up"
-                        : loggingIn
-                        ? "Logging In..."
-                        : "Login"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setIsRegistering((v) => !v)}
-                      className="account-auth-switch"
-                    >
-                      {isRegistering ? "Switch to Login" : "Switch to Sign Up"}
-                    </button>
-                  </form>
-                )}
+                      <input
+                        type="password"
+                        name="password"
+                        value={form.password}
+                        onChange={handleChange}
+                        placeholder="Password"
+                        required
+                        className="w-full border p-3 rounded text-base"
+                        autoComplete={
+                          isRegistering ? "new-password" : "current-password"
+                        }
+                      />
+
+                      {authError && (
+                        <p role="alert" className="text-sm text-red-600">
+                          {authError}
+                        </p>
+                      )}
+
+                      <button
+                        type="submit"
+                        disabled={loggingIn || registering}
+                        className="account-auth-submit"
+                      >
+                        {isRegistering
+                          ? registering
+                            ? "Signing Up..."
+                            : "Sign Up"
+                          : loggingIn
+                            ? "Logging In..."
+                            : "Login"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsRegistering((v) => !v);
+                          setAuthError("");
+                        }}
+                        disabled={loggingIn || registering}
+                        className="account-auth-switch"
+                      >
+                        {isRegistering
+                          ? "Switch to Login"
+                          : "Switch to Sign Up"}
+                      </button>
+                    </form>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
         </div>
       </div>
     </nav>

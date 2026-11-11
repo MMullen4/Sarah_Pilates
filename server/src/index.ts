@@ -8,6 +8,7 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import fs from "node:fs";
+import { getJwtSecret } from "./config/jwt.js";
 
 import connectDB, { isDbConnected } from "./config/db.js";
 import typeDefs from "./graphql/typeDefs.js";
@@ -23,6 +24,7 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 // Then load root .env (won't override existing values)
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
+const jwtSecret = getJwtSecret();
 const PORT = Number(process.env.PORT) || 3001;
 const NODE_ENV = process.env.NODE_ENV || "development";
 
@@ -30,38 +32,32 @@ const NODE_ENV = process.env.NODE_ENV || "development";
 type UserClaims = JwtPayload & { id: string; email: string; role?: string };
 
 const getUserFromToken = (token?: string): UserClaims | null => {
-  const secret =
-    process.env.JWT_SECRET ||
-    process.env.JWT_SECRET_KEY ||
-    "dev-only-supersecret";
-
-  console.log("Using JWT secret:", secret);
-
-  if (!secret) {
-    console.error("❌ JWT secret missing (set JWT_SECRET or JWT_SECRET_KEY)");
-    return null;
-  }
   if (!token) return null;
+
   try {
-    const decoded = jwt.verify(token, secret);
-    return typeof decoded === "string" ? null : (decoded as UserClaims);
-  } catch (e) {
-    console.warn("JWT verify failed:", (e as Error).message);
+    const decoded = jwt.verify(token, jwtSecret, {
+      algorithms: ["HS256"],
+    });
+
+    if (
+      typeof decoded === "string" ||
+      typeof decoded.id !== "string" ||
+      !/^[a-f0-9]{24}$/i.test(decoded.id) ||
+      typeof decoded.email !== "string"
+    ) {
+      return null;
+    }
+
+    return decoded as UserClaims;
+  } catch {
     return null;
   }
 };
-
-
-// const clientDist = path.resolve(
-//   __dirname,
-//   "../../clean-sarahs-pilates-client/dist"
-// );
 
 const clientDist =
   NODE_ENV === "production"
     ? path.join(process.cwd(), "clean-sarahs-pilates-client/dist")
     : path.resolve(__dirname, "../../clean-sarahs-pilates-client/dist");
-
 
 console.log("__dirname:", __dirname);
 console.log("clientDist path:", clientDist);
