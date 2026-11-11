@@ -38,7 +38,9 @@ const addMinutes = (time24: string, minutes: number) => {
     .padStart(2, "0")}`;
 };
 
-const Schedule: React.FC = () => {
+const Schedule: React.FC<{
+  onBookingReadyChange: (ready: boolean) => void;
+}> = ({ onBookingReadyChange }) => {
   const [date, setDate] = useState<Date>(new Date());
   const [time, setTime] = useState("");
   const [showSignInPrompt, setShowSignInPrompt] = useState(false);
@@ -190,6 +192,31 @@ const Schedule: React.FC = () => {
   const bookedTimes = bookings
     .filter((b) => (() => { const parsed = parseBookingDate(b.date); return parsed ? isSameDay(parsed, date) : false; })())
     .map((b) => b.time);
+
+  const originalBookingDate = selectedBooking
+    ? parseBookingDate(selectedBooking.date)
+    : null;
+  const editingOriginalSlot = Boolean(
+    selectedBooking &&
+    selectedBooking.time === time &&
+    originalBookingDate &&
+    isSameDay(originalBookingDate, date),
+  );
+  const bookingReady = Boolean(
+    currentUser?.id &&
+    Number.isFinite(date.getTime()) &&
+    availableHours.includes(time) &&
+    !isPastSlot(time) &&
+    (!bookedTimes.includes(time) || editingOriginalSlot) &&
+    !bookingsLoading &&
+    !bookingsError &&
+    !bookingPending,
+  );
+
+  React.useEffect(() => {
+    onBookingReadyChange(bookingReady);
+    return () => onBookingReadyChange(false);
+  }, [bookingReady, onBookingReadyChange]);
 
   const upcomingSorted = React.useMemo(() => {
     const toMinutes = (t: string) => {

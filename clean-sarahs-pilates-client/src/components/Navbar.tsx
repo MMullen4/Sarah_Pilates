@@ -4,7 +4,7 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { useMutation } from "@apollo/client";
 import { LOGIN_USER, REGISTER_USER } from "../graphql/mutations";
 
-const Navbar: React.FC = () => {
+const Navbar: React.FC<{ bookingReady: boolean }> = ({ bookingReady }) => {
   const [form, setForm] = useState({ username: "", email: "", password: "" });
   const [isRegistering, setIsRegistering] = useState(false);
   const [authError, setAuthError] = useState("");
@@ -13,6 +13,11 @@ const Navbar: React.FC = () => {
     localStorage.getItem("token"),
   );
   const location = useLocation();
+  const bookButtonClass = !token
+    ? "book-button book-button--signed-out"
+    : location.pathname === "/schedule" && bookingReady
+      ? "book-button book-button--ready"
+      : "book-button";
   const menuRef = useRef<HTMLDivElement>(null);
 
   const [loginUser, { loading: loggingIn }] = useMutation(LOGIN_USER);
@@ -127,7 +132,7 @@ const Navbar: React.FC = () => {
           {location.pathname === "/schedule" ? (
             <button
               type="button"
-              className="book-button"
+              className={bookButtonClass}
               onClick={() => {
                 const form = document.getElementById(
                   "booking-form",
@@ -138,7 +143,7 @@ const Navbar: React.FC = () => {
               Book now
             </button>
           ) : (
-            <Link to="/schedule" className="book-button">
+            <Link to="/schedule" className={bookButtonClass}>
               Book now
             </Link>
           )}
