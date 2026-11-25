@@ -11,6 +11,7 @@ import fs from "node:fs";
 import { getJwtSecret } from "./config/jwt.js";
 
 import connectDB, { isDbConnected } from "./config/db.js";
+import { requireBookingSlotIndex } from "./models/Booking.js";
 import typeDefs from "./graphql/typeDefs.js";
 import { resolvers } from "./graphql/resolvers.js";
 
@@ -72,6 +73,8 @@ const startServer = async () => {
     console.error("❌ MongoDB connection failed:", err?.message || err);
     process.exit(1);
   }
+
+  await requireBookingSlotIndex();
 
   const app = express();
   // Cross origin

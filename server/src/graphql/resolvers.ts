@@ -1,4 +1,6 @@
+import mongoose from "mongoose";
 import Booking from "../models/Booking.js";
+import { normalizeBookingSlot, validateFutureBookingSlot } from "../models/bookingSlot.js";
 import User from "../models/User.js";
 import nodemailer from "nodemailer";
 import jwt from "jsonwebtoken";
@@ -16,6 +18,22 @@ const generateToken = (user: any) =>
     { algorithm: "HS256", expiresIn: "7d" },
   );
 
+async function reserveSlot<T>(write: () => Promise<T>) {
+  try {
+    return await write();
+  } catch (error) {
+    if (
+      error instanceof mongoose.mongo.MongoServerError &&
+      error.code === 11000 &&
+      error.keyPattern?.date === 1 &&
+      error.keyPattern?.time === 1
+    ) {
+      throw new Error("That time slot is already booked");
+    }
+    throw error;
+  }
+}
+
 export const resolvers = {
   Query: {
     // ✅ Sorted & filtered to only return today's and future bookings
@@ -23,27 +41,9 @@ export const resolvers = {
       const now = new Date();
       const bookings = await Booking.find().sort({ date: 1, time: 1 });
 
-      const upcoming = bookings.filter((booking: any) => {
-        if (!booking.date || !booking.time) return false;
-        const raw = String(booking.date).trim();
-        const numeric = /^[0-9]+$/.test(raw);
-        const baseMs = numeric ? Number(raw) : Date.parse(raw);
-        if (!Number.isFinite(baseMs)) return false;
-        const [hours, minutes] = String(booking.time).split(":").map(Number);
-        if (
-          !Number.isInteger(hours) ||
-          !Number.isInteger(minutes) ||
-          hours < 0 ||
-          hours > 23 ||
-          minutes < 0 ||
-          minutes > 59
-        )
-          return false;
-        const slotDate = new Date(baseMs);
-        if (Number.isNaN(slotDate.getTime())) return false;
-        slotDate.setHours(hours, minutes, 0, 0);
-        return slotDate.getTime() >= now.getTime();
-      });
+      const upcoming = bookings.filter((booking) =>
+        normalizeBookingSlot(booking.date, booking.time).startsAt > now.getTime(),
+      );
       // Return availability to everyone, but customer details only to the
       // booking owner or a database-verified administrator.
       const viewer = context.user?.id
@@ -119,52 +119,15 @@ export const resolvers = {
       const u = await User.findById(context.user.id).lean();
       if (!u) throw new Error("User not found");
 
-      const dateStr = String(input.date).trim(); // e.g. "1761807600000" (local start-of-day ms)
-      const timeStr = String(input.time).trim(); // e.g. "08:00"
-
-      // Validate date
-      const baseMs = Number(dateStr);
-      if (!Number.isFinite(baseMs)) throw new Error("Invalid date");
-
-      // Validate & compute time
-      const [hhStr, mmStr] = timeStr.split(":");
-      const hh = Number(hhStr),
-        mm = Number(mmStr);
-      if (
-        !Number.isInteger(hh) ||
-        !Number.isInteger(mm) ||
-        hh < 0 ||
-        hh > 23 ||
-        mm < 0 ||
-        mm > 59
-      ) {
-        throw new Error("Invalid time");
-      }
-
-      // Build the slot timestamp by adding minutes to local start-of-day (no timezone surprises)
-      const slotMs = baseMs + (hh * 60 + mm) * 60_000;
-
-      // Block only if the combined slot is in the past
-      if (slotMs < Date.now()) throw new Error("Cannot book a past time");
-
-      // Prevent double-booking
-      const exists = await Booking.findOne({
-        date: dateStr,
-        time: timeStr,
-      }).lean();
-      if (exists) throw new Error("That time slot is already booked");
+      const slot = validateFutureBookingSlot(input.date, input.time);
 
       // Always derive identity from auth (ignore client-sent name/email)
-      const booking = await Booking.create({
-        date: dateStr,
-        time: timeStr,
+      return await reserveSlot(() => Booking.create({
+        ...slot,
         name: u.username ?? "User",
         email: u.email ?? "",
-        user: context.user.id,
-        createdAt: new Date().toISOString(),
-      });
-
-      return booking;
+        user: u._id,
+      }));
     },
 
     // ✅ Update booking (with ownership check)
@@ -175,31 +138,20 @@ export const resolvers = {
       if (!booking) throw new Error("Booking not found");
 
       const actingUser = await User.findById(context.user.id).lean();
-      const isAdmin = actingUser?.role === "admin";
-      if (!isAdmin && booking.user.toString() !== context.user.id) {
+      if (!actingUser) throw new Error("Unauthorized");
+      const isAdmin = actingUser.role === "admin";
+      if (!isAdmin && String(booking.user) !== String(actingUser._id)) {
         throw new Error("You can only edit your own appointments");
       }
 
-      // Validate new date and time
-      const dateStr = String(input?.date ?? "").trim();
-      const timeStr = String(input?.time ?? "").trim();
-      if (
-        !Number.isFinite(Number(dateStr)) ||
-        !/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(timeStr)
-      ) {
-        throw new Error("Invalid appointment date or time");
-      }
-      const conflict = await Booking.findOne({
-        _id: { $ne: booking._id },
-        date: dateStr,
-        time: timeStr,
-      }).lean();
-      if (conflict) throw new Error("That time slot is already booked");
-      return await Booking.findByIdAndUpdate(
+      const slot = validateFutureBookingSlot(input.date, input.time);
+      const updated = await reserveSlot(() => Booking.findByIdAndUpdate(
         id,
-        { date: dateStr, time: timeStr },
-        { new: true },
-      );
+        slot,
+        { new: true, runValidators: true },
+      ).exec());
+      if (!updated) throw new Error("Booking not found");
+      return updated;
     },
 
     // ✅ Delete booking (with ownership check)

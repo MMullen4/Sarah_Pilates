@@ -38,10 +38,61 @@ const addMinutes = (time24: string, minutes: number) => {
     .padStart(2, "0")}`;
 };
 
+const studioClock = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "America/Los_Angeles",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+});
+
+const studioNow = () => {
+  const parts = Object.fromEntries(
+    studioClock.formatToParts(Date.now()).map(({ type, value }) => [type, value]),
+  );
+  return {
+    day: `${parts.year}-${parts.month}-${parts.day}`,
+    time: `${parts.hour}:${parts.minute}`,
+  };
+};
+
+// Treat the calendar's local Date as a displayed day, not an appointment instant.
+const calendarDay = (date: Date) =>
+  [String(date.getFullYear()), String(date.getMonth() + 1), String(date.getDate())]
+    .map((part) => part.padStart(2, "0")).join("-");
+
+const calendarDate = (day: string) => {
+  const [year, month, date] = day.split("-").map(Number);
+  return new Date(year, month - 1, date);
+};
+
+const bookingDay = (raw: string) => {
+  const dayOnly = /^\d{4}-\d{2}-\d{2}$/.test(raw);
+  if (dayOnly) return raw;
+  const timestamp = /^\d+$/.test(raw) ? Number(raw) : Date.parse(raw);
+  if (!Number.isFinite(new Date(timestamp).getTime())) return "";
+  const parts = Object.fromEntries(
+    studioClock.formatToParts(timestamp).map(({ type, value }) => [type, value]),
+  );
+  return `${parts.year}-${parts.month}-${parts.day}`;
+};
+
 const Schedule: React.FC<{
   onBookingReadyChange: (ready: boolean) => void;
 }> = ({ onBookingReadyChange }) => {
-  const [date, setDate] = useState<Date>(new Date());
+  const [clock, setClock] = useState(studioNow);
+  const [date, setDate] = useState(() => calendarDate(clock.day));
+  React.useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      setClock(studioNow());
+      timer = setTimeout(tick, 60_000 - (Date.now() % 60_000));
+    };
+    tick();
+    return () => clearTimeout(timer);
+  }, []);
   const [time, setTime] = useState("");
   const [showSignInPrompt, setShowSignInPrompt] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -92,12 +143,9 @@ const Schedule: React.FC<{
     setShowSignInPrompt(false);
   };
   const availableHours = Array.from({ length: 10 }, (_, i) => `${String(i + 8).padStart(2, "0")}:00`);
-  const isPastSlot = (slot: string) => {
-    const [hours, minutes] = slot.split(":").map(Number);
-    const at = new Date(date);
-    at.setHours(hours, minutes, 0, 0);
-    return at.getTime() < Date.now();
-  };
+  const selectedDay = calendarDay(date);
+  const isPastSlot = (slot: string, now = clock) =>
+    `${selectedDay}T${slot}` <= `${now.day}T${now.time}`;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,12 +154,11 @@ const Schedule: React.FC<{
       return;
     }
 
-    if (!time) {
+    if (!bookingReady || isPastSlot(time, studioNow())) {
       toast.error("Please select an available date and time.");
       return;
     }
     if (bookingPending) return;
-    const isoDate = date.getTime().toString();
     const wasEditing = Boolean(selectedBooking);
     setBookingPending(true);
 
@@ -121,7 +168,7 @@ const Schedule: React.FC<{
           variables: {
             id: selectedBooking._id,
             input: {
-              date: isoDate,
+              date: selectedDay,
               time: time,
             },
           },
@@ -132,7 +179,7 @@ const Schedule: React.FC<{
         await bookAppointment({
           variables: {
             input: {
-              date: isoDate,
+              date: selectedDay,
               time: time,
             },
           },
@@ -171,43 +218,22 @@ const Schedule: React.FC<{
     setSubmitted(false);
     setSelectedBooking(booking);
     setTime(booking.time);
-    const bookingDate = parseBookingDate(booking.date);
-    if (bookingDate) setDate(bookingDate);
-  };
-
-  const parseBookingDate = (raw: string) => {
-    const value = String(raw).trim();
-    const timestamp = /^\d+$/.test(value) ? Number(value) : Date.parse(value);
-    return Number.isFinite(timestamp) ? new Date(timestamp) : null;
-  };
-
-  const isSameDay = (d1: Date, d2: Date) =>
-    d1.toDateString() === d2.toDateString();
-
-  const isPastDate = (d: Date) => {
-    const today = new Date();
-    return d.setHours(0, 0, 0, 0) < today.setHours(0, 0, 0, 0);
+    const day = bookingDay(booking.date);
+    if (day) setDate(calendarDate(day));
   };
 
   const bookedTimes = bookings
-    .filter((b) => (() => { const parsed = parseBookingDate(b.date); return parsed ? isSameDay(parsed, date) : false; })())
-    .map((b) => b.time);
+    .filter((booking) =>
+      booking._id !== selectedBooking?._id && bookingDay(booking.date) === selectedDay,
+    )
+    .map((booking) => booking.time);
 
-  const originalBookingDate = selectedBooking
-    ? parseBookingDate(selectedBooking.date)
-    : null;
-  const editingOriginalSlot = Boolean(
-    selectedBooking &&
-    selectedBooking.time === time &&
-    originalBookingDate &&
-    isSameDay(originalBookingDate, date),
-  );
   const bookingReady = Boolean(
     currentUser?.id &&
     Number.isFinite(date.getTime()) &&
     availableHours.includes(time) &&
     !isPastSlot(time) &&
-    (!bookedTimes.includes(time) || editingOriginalSlot) &&
+    !bookedTimes.includes(time) &&
     !bookingsLoading &&
     !bookingsError &&
     !bookingPending,
@@ -217,34 +243,6 @@ const Schedule: React.FC<{
     onBookingReadyChange(bookingReady);
     return () => onBookingReadyChange(false);
   }, [bookingReady, onBookingReadyChange]);
-
-  const upcomingSorted = React.useMemo(() => {
-    const toMinutes = (t: string) => {
-      const [h, m] = t.split(":").map(Number);
-      return h * 60 + m;
-    };
-    const isFutureOrToday = (timestamp: number) => {
-      const d = new Date(timestamp);
-      const today = new Date();
-      d.setHours(0, 0, 0, 0);
-      today.setHours(0, 0, 0, 0);
-      return d.getTime() >= today.getTime();
-    };
-
-    return (bookings || [])
-      .filter((b) => {
-        const parsed = parseBookingDate(b.date);
-        return parsed !== null && isFutureOrToday(parsed.getTime());
-      })
-      .sort((a, b) => {
-        const da = parseBookingDate(a.date)?.getTime() ?? 0,
-          db = parseBookingDate(b.date)?.getTime() ?? 0;
-        if (da !== db) return da - db;
-        const ma = toMinutes(a.time),
-          mb = toMinutes(b.time);
-        return ma - mb;
-      });
-  }, [bookings]);
 
   return (
     <main className="booking-page">
@@ -259,7 +257,7 @@ const Schedule: React.FC<{
       />
 
       <p className="booking-subtitle">
-        Choose a date and time below.
+        Choose a date and time below. Times are Pacific.
       </p>
 
       <div className="booking-calendar-wrap">
@@ -267,7 +265,7 @@ const Schedule: React.FC<{
           <Calendar
             onChange={(value) => changeDate(value as Date)}
             value={date}
-            tileDisabled={({ date }) => isPastDate(date)}
+            tileDisabled={({ date }) => calendarDay(date) < clock.day}
           />
         </div>
       </div>
@@ -287,8 +285,7 @@ const Schedule: React.FC<{
             {availableHours.map((slot) => {
               const booked = bookedTimes.includes(slot);
               const past = isPastSlot(slot);
-              const editingOriginalSlot = selectedBooking?.time === slot && (() => { const parsed = parseBookingDate(selectedBooking.date); return parsed ? isSameDay(parsed, date) : false; })();
-              const unavailable = (booked && !editingOriginalSlot) || past;
+              const unavailable = booked || past;
               return (
                 <button type="button" key={slot}
                   className={`booking-time-slot ${unavailable ? "is-unavailable" : ""} ${time === slot ? "is-selected" : ""}`}
@@ -296,7 +293,7 @@ const Schedule: React.FC<{
                   aria-pressed={time === slot}
                   onClick={() => { setTime(slot); setShowSignInPrompt(false); }}>
                   <span>{formatTime12Hour(slot)}</span>
-                  <span className="booking-time-status">{booked && !editingOriginalSlot ? "Booked" : past ? "Past" : time === slot ? "Selected" : "Available"}</span>
+                  <span className="booking-time-status">{booked ? "Booked" : past ? "Past" : time === slot ? "Selected" : "Available"}</span>
                 </button>
               );
             })}
@@ -329,7 +326,7 @@ const Schedule: React.FC<{
         </h2>
 
         {bookingsLoading && bookings.length === 0 && <p>Loading appointments…</p>}
-        {upcomingSorted.filter((booking) => isAdmin || booking.email === currentUser?.email).map((booking) => (
+        {bookings.filter((booking) => isAdmin || booking.email === currentUser?.email).map((booking) => (
           <div
             key={booking._id}
             className="border rounded p-4 mb-3 flex justify-between items-center"
@@ -338,7 +335,7 @@ const Schedule: React.FC<{
               <p>
                 📅{" "}
                 <strong>
-                  {parseBookingDate(booking.date)?.toDateString() ?? "Date unavailable"}
+                  {bookingDay(booking.date) ? calendarDate(bookingDay(booking.date)).toDateString() : "Date unavailable"}
                 </strong>{" "}
                 at <strong>{formatTime12Hour(booking.time)}</strong>
               </p>
